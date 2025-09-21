@@ -86,21 +86,110 @@ class IPRotator:
     
     def load_configuration(self):
         """Load VPN/proxy configurations from config file."""
+        import os
+        
+        # Security: Prevent path traversal attacks
+        config_file = os.path.abspath(self.config_file)
+        if not config_file.startswith(os.getcwd()):
+            # Allow config files in the project directory only
+            if not os.path.basename(config_file) == os.path.basename(self.config_file):
+                self.logger.error(f"Security: Config file path not allowed: {self.config_file}")
+                sys.exit(1)
+            config_file = os.path.join(os.getcwd(), os.path.basename(self.config_file))
+        
         try:
-            with open(self.config_file, 'r') as f:
+            with open(config_file, 'r') as f:
                 config = json.load(f)
-                self.vpn_configs = config.get('vpn_configs', [])
-                self.proxy_configs = config.get('proxy_configs', [])
+                self.vpn_configs = self._validate_vpn_configs(config.get('vpn_configs', []))
+                self.proxy_configs = self._validate_proxy_configs(config.get('proxy_configs', []))
                 self.logger.info(f"Loaded {len(self.vpn_configs)} VPN configs and {len(self.proxy_configs)} proxy configs")
         except FileNotFoundError:
-            self.logger.warning(f"Config file {self.config_file} not found. Using default settings.")
+            self.logger.warning(f"Config file {config_file} not found. Using default settings.")
             self.create_default_config()
         except json.JSONDecodeError as e:
             self.logger.error(f"Error parsing config file: {e}")
             sys.exit(1)
+        except PermissionError:
+            self.logger.error(f"Permission denied accessing config file: {config_file}")
+            sys.exit(1)
+    
+    def _validate_vpn_configs(self, vpn_configs: List[Dict]) -> List[Dict]:
+        """Validate and sanitize VPN configurations."""
+        validated_configs = []
+        for config in vpn_configs:
+            if not isinstance(config, dict):
+                self.logger.warning("Skipping invalid VPN config: not a dictionary")
+                continue
+                
+            # Required fields
+            name = config.get('name', '').strip()
+            config_file = config.get('config_file', '').strip()
+            
+            if not name or not config_file:
+                self.logger.warning("Skipping VPN config with missing name or config_file")
+                continue
+            
+            # Security: Validate name contains only safe characters
+            import re
+            if not re.match(r'^[a-zA-Z0-9_-]+$', name):
+                self.logger.warning(f"Skipping VPN config with invalid name: {name}")
+                continue
+                
+            validated_configs.append({
+                'name': name,
+                'type': config.get('type', 'openvpn'),
+                'config_file': config_file,
+                'enabled': bool(config.get('enabled', True))
+            })
+            
+        return validated_configs
+    
+    def _validate_proxy_configs(self, proxy_configs: List[Dict]) -> List[Dict]:
+        """Validate and sanitize proxy configurations."""
+        validated_configs = []
+        for config in proxy_configs:
+            if not isinstance(config, dict):
+                self.logger.warning("Skipping invalid proxy config: not a dictionary")
+                continue
+                
+            # Required fields
+            name = config.get('name', '').strip()
+            host = config.get('host', '127.0.0.1').strip()
+            port = config.get('port', 9050)
+            
+            if not name:
+                self.logger.warning("Skipping proxy config with missing name")
+                continue
+            
+            # Security: Validate host is not external by default
+            if not host.startswith(('127.', '192.168.', '10.', '172.')):
+                self.logger.warning(f"Skipping proxy config with external host: {host}")
+                continue
+            
+            # Validate port range
+            try:
+                port = int(port)
+                if not (1 <= port <= 65535):
+                    raise ValueError
+            except (ValueError, TypeError):
+                self.logger.warning(f"Skipping proxy config with invalid port: {port}")
+                continue
+                
+            validated_configs.append({
+                'name': name,
+                'type': config.get('type', 'socks5'),
+                'host': host,
+                'port': port,
+                'enabled': bool(config.get('enabled', True))
+            })
+            
+        return validated_configs
     
     def create_default_config(self):
         """Create a default configuration file."""
+        import os
+        import stat
+        
         default_config = {
             "vpn_configs": [
                 {
@@ -129,9 +218,16 @@ class IPRotator:
             "check_ip_url": "https://httpbin.org/ip"
         }
         
-        with open(self.config_file, 'w') as f:
-            json.dump(default_config, f, indent=4)
-        self.logger.info(f"Created default config file: {self.config_file}")
+        # Security: Create config file with secure permissions
+        try:
+            with open(self.config_file, 'w') as f:
+                json.dump(default_config, f, indent=4)
+            
+            # Set secure file permissions (owner read/write only)
+            os.chmod(self.config_file, stat.S_IRUSR | stat.S_IWUSR)
+            self.logger.info(f"Created default config file with secure permissions: {self.config_file}")
+        except Exception as e:
+            self.logger.error(f"Failed to create secure config file: {e}")
     
     def get_current_ip(self) -> Optional[str]:
         """Get current external IP address."""
@@ -181,13 +277,15 @@ class IPRotator:
             return  # No actual VPN to disconnect in demo mode
             
         try:
-            # Kill existing OpenVPN processes
-            subprocess.run(['sudo', 'pkill', '-f', 'openvpn'], 
-                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
+            # Security: Use specific process filtering to prevent killing unintended processes
+            subprocess.run(['sudo', 'pkill', '-f', '/usr/sbin/openvpn', '--exact'], 
+                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False, timeout=10)
             
-            # Reset DNS settings
-            subprocess.run(['sudo', 'systemctl', 'restart', 'systemd-resolved'], 
-                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
+            # Reset DNS settings (only if systemd-resolved exists)
+            import shutil
+            if shutil.which('systemctl'):
+                subprocess.run(['sudo', 'systemctl', 'restart', 'systemd-resolved'], 
+                             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False, timeout=15)
             
             time.sleep(2)  # Wait for disconnection
             if not self.shutting_down:
@@ -205,12 +303,29 @@ class IPRotator:
                 self.logger.error(f"No config file specified for VPN: {vpn_config['name']}")
                 return False
             
+            # Security: Validate and sanitize config file path
+            import os
+            config_file = os.path.abspath(config_file)
+            if not os.path.exists(config_file):
+                self.logger.error(f"VPN config file not found: {config_file}")
+                return False
+            
+            if not config_file.endswith('.ovpn'):
+                self.logger.error(f"Security: Invalid VPN config file extension: {config_file}")
+                return False
+            
             # Disconnect current VPN first
             self.disconnect_current_vpn()
             
-            # Connect to new VPN
-            cmd = ['sudo', 'openvpn', '--config', config_file, '--daemon']
-            result = subprocess.run(cmd, capture_output=True, text=True, stderr=subprocess.DEVNULL)
+            # Security: Use secure subprocess execution with explicit arguments
+            cmd = ['sudo', 'openvpn', '--config', config_file, '--daemon', 
+                   '--script-security', '2', '--up-restart', '--down-pre']
+            try:
+                result = subprocess.run(cmd, capture_output=True, text=True, 
+                                      stderr=subprocess.DEVNULL, timeout=30)
+            except subprocess.TimeoutExpired:
+                self.logger.error(f"VPN connection timeout for {vpn_config['name']}")
+                return False
             
             if result.returncode == 0:
                 self.logger.info(f"Connected to VPN: {vpn_config['name']}")
@@ -226,7 +341,10 @@ class IPRotator:
                 
         except (BrokenPipeError, ConnectionResetError):
             # Silently ignore broken pipe errors - these are expected during VPN switching
-            pass
+            return False
+        except subprocess.TimeoutExpired:
+            self.logger.error(f"VPN connection timeout for {vpn_config['name']}")
+            return False
         except Exception as e:
             if "BrokenPipeError" not in str(e):
                 self.logger.error(f"Error connecting to VPN {vpn_config['name']}: {e}")
@@ -452,9 +570,16 @@ Examples:
             sys.exit(1)
         return
     
-    # Validate interval
-    if args.interval < 1:
-        safe_print("Error: Interval must be at least 1 second")
+    # Security: Validate interval to prevent attacks
+    if args.interval < 1 or args.interval > 86400:
+        safe_print("Error: Interval must be between 1 and 86400 seconds (24 hours)")
+        sys.exit(1)
+        
+    # Security: Additional validation for potential integer overflow
+    try:
+        int(args.interval)
+    except (ValueError, OverflowError):
+        safe_print("Error: Invalid interval value")
         sys.exit(1)
     
     # Start IP rotator

@@ -340,25 +340,32 @@ main() {
         exit 1
     fi
     
-    # Validate interval
-    if [[ ! "$interval" =~ ^[0-9]+$ ]] || [[ "$interval" -lt 1 ]]; then
-        echo -e "${RED}Error: Interval must be a positive integer${NC}"
+    # Security: Validate and sanitize interval
+    if [[ ! "$interval" =~ ^[0-9]+$ ]] || [[ "$interval" -lt 1 ]] || [[ "$interval" -gt 86400 ]]; then
+        echo -e "${RED}Error: Interval must be a positive integer between 1 and 86400 seconds${NC}"
         exit 1
     fi
     
-    # Build Python command
-    python_cmd="python3 \"$PYTHON_SCRIPT\" --interval $interval --config \"$config\""
+    # Security: Validate config file path
+    if [[ "$config" == *".."* ]] || [[ "$config" == *"/"* && "$config" != "$DEFAULT_CONFIG" ]]; then
+        # Only allow relative paths or default config for security
+        config="$(basename "$config")"
+        echo -e "${YELLOW}Security: Using sanitized config filename: $config${NC}"
+    fi
+    
+    # Security: Build command with array to prevent injection
+    python_args=("$PYTHON_SCRIPT" "--interval" "$interval" "--config" "$config")
     
     if [[ -n "$verbose" ]]; then
-        python_cmd="$python_cmd $verbose"
+        python_args+=("--verbose")
     fi
     
     if [[ -n "$check_ip" ]]; then
-        python_cmd="$python_cmd $check_ip"
+        python_args+=("--check-ip")
     fi
     
     if [[ -n "$demo" ]]; then
-        python_cmd="$python_cmd $demo"
+        python_args+=("--demo")
     fi
     
     # Show configuration
@@ -373,8 +380,8 @@ main() {
         echo ""
     fi
     
-    # Execute Python script - use exec to replace bash process
-    exec python3 "$PYTHON_SCRIPT" --interval $interval --config "$config" $verbose $check_ip $demo
+    # Security: Execute Python script with array expansion to prevent injection
+    exec python3 "${python_args[@]}"
 }
 
 # Run main function
