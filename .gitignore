@@ -1,0 +1,97 @@
+# IP Rotator .gitignore
+
+# Log files
+*.log
+ip_rotator.log
+*.log.*
+
+# Configuration files with sensitive data
+config.json
+*.ovpn
+auth.txt
+credentials.txt
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Backup files
+*.bak
+*.backup
+*.tmp
+*~
+
+# VPN and security related files
+*.key
+*.crt
+*.pem
+*.p12
+*.pfx
+ca.crt
+client.crt
+client.key
+ta.key
+
+# Test files
+test_*.py
+*_test.py
+tests/
+coverage/
+.coverage
+.pytest_cache/
+
+# Local development
+local_config.json
+dev_config.json
+test_config.json
+.env
+.env.local
+
+# Logs and runtime files
+nohup.out
+*.pid
+*.lock

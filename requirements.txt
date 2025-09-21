@@ -1,0 +1,21 @@
+# IP Rotator Requirements
+# Core Python packages (usually included in Python 3.6+)
+# No external dependencies required for basic functionality
+
+# Optional packages for enhanced functionality
+requests>=2.25.1      # Alternative to curl for HTTP requests
+psutil>=5.8.0         # System and process utilities
+colorama>=0.4.4       # Cross-platform colored terminal text
+
+# Development and testing (optional)
+pytest>=6.2.4        # Testing framework
+pytest-cov>=2.12.1   # Coverage reporting
+black>=21.5b2         # Code formatter
+flake8>=3.9.2         # Linting
+
+# Security tools integration (optional)
+python-nmap>=0.6.1    # Network scanning
+scapy>=2.4.5          # Packet manipulation (requires admin privileges)
+
+# Note: This tool primarily uses built-in Python modules and system commands
+# The above packages are optional enhancements for specific use cases
