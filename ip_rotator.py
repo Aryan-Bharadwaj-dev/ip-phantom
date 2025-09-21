@@ -17,6 +17,31 @@ from typing import Optional, Dict, List
 from datetime import datetime
 
 
+class SafeStreamHandler(logging.StreamHandler):
+    """Stream handler that gracefully handles broken pipe errors."""
+    
+    def emit(self, record):
+        try:
+            super().emit(record)
+            self.flush()
+        except (BrokenPipeError, ConnectionResetError):
+            # Silently ignore broken pipe errors
+            pass
+        except Exception:
+            # Let other exceptions bubble up
+            self.handleError(record)
+
+
+def safe_print(*args, **kwargs):
+    """Print function that gracefully handles broken pipe errors."""
+    try:
+        print(*args, **kwargs)
+        sys.stdout.flush()
+    except (BrokenPipeError, ConnectionResetError):
+        # Silently ignore broken pipe errors
+        pass
+
+
 class IPRotator:
     """Main class for handling IP rotation functionality."""
     
@@ -29,6 +54,7 @@ class IPRotator:
         self.demo_mode = demo_mode
         self.demo_ips = ["192.168.1.100", "203.0.113.45", "198.51.100.78", "203.0.113.92", "192.0.2.146"]
         self.demo_counter = 0
+        self.shutting_down = False
         self.setup_logging()
         self.load_configuration()
         
@@ -38,15 +64,25 @@ class IPRotator:
     
     def setup_logging(self):
         """Setup logging configuration."""
-        logging.basicConfig(
-            level=logging.INFO,
-            format='%(asctime)s - %(levelname)s - %(message)s',
-            handlers=[
-                logging.FileHandler('ip_rotator.log'),
-                logging.StreamHandler(sys.stdout)
-            ]
-        )
+        # Create a custom formatter for clean output
+        formatter = logging.Formatter('%(message)s')
+        
+        # File handler with detailed logs
+        file_handler = logging.FileHandler('ip_rotator.log')
+        file_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+        
+        # Console handler with clean output - wrapped to handle broken pipes
+        console_handler = SafeStreamHandler(sys.stdout)
+        console_handler.setFormatter(formatter)
+        
+        # Configure logger
         self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(logging.INFO)
+        self.logger.addHandler(file_handler)
+        self.logger.addHandler(console_handler)
+        
+        # Suppress other loggers
+        logging.getLogger().setLevel(logging.WARNING)
     
     def load_configuration(self):
         """Load VPN/proxy configurations from config file."""
@@ -115,7 +151,7 @@ class IPRotator:
                 try:
                     result = subprocess.run([
                         'curl', '-s', '--connect-timeout', '10', service
-                    ], capture_output=True, text=True, timeout=15)
+                    ], capture_output=True, text=True, timeout=15, stderr=subprocess.DEVNULL)
                     
                     if result.returncode == 0:
                         response = json.loads(result.stdout)
@@ -125,32 +161,41 @@ class IPRotator:
                             # Clean IP (remove port if present)
                             ip = ip.split(',')[0].strip()
                             return ip
-                except (subprocess.TimeoutExpired, json.JSONDecodeError, KeyError):
+                except (subprocess.TimeoutExpired, json.JSONDecodeError, KeyError, BrokenPipeError):
                     continue
             
             self.logger.error("Failed to get current IP from all services")
             return None
             
+        except (BrokenPipeError, ConnectionResetError):
+            # Silently ignore broken pipe errors
+            return None
         except Exception as e:
-            self.logger.error(f"Error getting current IP: {e}")
+            if "BrokenPipeError" not in str(e):
+                self.logger.error(f"Error getting current IP: {e}")
             return None
     
     def disconnect_current_vpn(self):
         """Disconnect current VPN connection."""
+        if self.demo_mode:
+            return  # No actual VPN to disconnect in demo mode
+            
         try:
             # Kill existing OpenVPN processes
             subprocess.run(['sudo', 'pkill', '-f', 'openvpn'], 
-                         capture_output=True, check=False)
+                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
             
             # Reset DNS settings
             subprocess.run(['sudo', 'systemctl', 'restart', 'systemd-resolved'], 
-                         capture_output=True, check=False)
+                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
             
             time.sleep(2)  # Wait for disconnection
-            self.logger.info("Disconnected from current VPN")
+            if not self.shutting_down:
+                self.logger.info("Disconnected from current VPN")
             
         except Exception as e:
-            self.logger.error(f"Error disconnecting VPN: {e}")
+            if not self.shutting_down:
+                self.logger.error(f"Error disconnecting VPN: {e}")
     
     def connect_vpn(self, vpn_config: Dict) -> bool:
         """Connect to a VPN server."""
@@ -165,18 +210,26 @@ class IPRotator:
             
             # Connect to new VPN
             cmd = ['sudo', 'openvpn', '--config', config_file, '--daemon']
-            result = subprocess.run(cmd, capture_output=True, text=True)
+            result = subprocess.run(cmd, capture_output=True, text=True, stderr=subprocess.DEVNULL)
             
             if result.returncode == 0:
                 self.logger.info(f"Connected to VPN: {vpn_config['name']}")
                 time.sleep(5)  # Wait for connection to establish
                 return True
             else:
-                self.logger.error(f"Failed to connect to VPN {vpn_config['name']}: {result.stderr}")
+                # Only log actual errors, not normal termination messages
+                if result.stderr and "BrokenPipeError" not in str(result.stderr):
+                    self.logger.error(f"Failed to connect to VPN {vpn_config['name']}: {result.stderr}")
+                else:
+                    self.logger.error(f"Failed to connect to VPN {vpn_config['name']}")
                 return False
                 
+        except (BrokenPipeError, ConnectionResetError):
+            # Silently ignore broken pipe errors - these are expected during VPN switching
+            pass
         except Exception as e:
-            self.logger.error(f"Error connecting to VPN {vpn_config['name']}: {e}")
+            if "BrokenPipeError" not in str(e):
+                self.logger.error(f"Error connecting to VPN {vpn_config['name']}: {e}")
             return False
     
     def set_proxy(self, proxy_config: Dict) -> bool:
@@ -208,7 +261,6 @@ class IPRotator:
             if self.demo_mode:
                 # Demo mode: simulate successful IP rotation
                 old_ip = self.get_current_ip()
-                self.logger.info(f"Current IP: {old_ip}")
                 
                 # Simulate rotation delay
                 time.sleep(1)
@@ -216,7 +268,7 @@ class IPRotator:
                 
                 new_ip = self.get_current_ip()
                 self.current_ip = new_ip
-                self.logger.info(f"✓ IP successfully rotated: {old_ip} → {new_ip} (Demo Mode)")
+                safe_print(f"🔄 Rotating IP: {old_ip} → {new_ip}")
                 return True
             
             # Check for valid VPN configurations
@@ -266,26 +318,41 @@ class IPRotator:
     
     def signal_handler(self, signum, frame):
         """Handle shutdown signals gracefully."""
-        self.logger.info(f"Received signal {signum}. Shutting down gracefully...")
+        if self.shutting_down:
+            return  # Already shutting down
+            
+        self.shutting_down = True
         self.running = False
         
-        # Cleanup: disconnect VPN
         try:
-            self.disconnect_current_vpn()
-        except Exception as e:
-            self.logger.error(f"Error during cleanup: {e}")
-        
+            safe_print("\n🛑 Shutting down gracefully...")
+            
+            # Cleanup: disconnect VPN only if not in demo mode
+            if not self.demo_mode:
+                try:
+                    self.disconnect_current_vpn()
+                except Exception:
+                    pass  # Silent cleanup
+            
+            safe_print("✅ IP Rotator stopped safely.")
+        except (BrokenPipeError, ConnectionResetError):
+            # Silently ignore broken pipe errors during shutdown
+            pass
         sys.exit(0)
     
     def run(self):
         """Main execution loop."""
-        self.logger.info(f"Starting IP Rotator with {self.interval}s interval")
-        self.logger.info("Press Ctrl+C to stop")
+        if self.demo_mode:
+            safe_print(f"🚀 Starting IP Rotator Demo (rotating every {self.interval}s)")
+        else:
+            safe_print(f"🚀 Starting IP Rotator with {self.interval}s interval")
+        safe_print("Press Ctrl+C to stop")
+        safe_print()
         
         # Get initial IP
         initial_ip = self.get_current_ip()
         if initial_ip:
-            self.logger.info(f"Initial IP: {initial_ip}")
+            safe_print(f"📍 Initial IP: {initial_ip}")
             self.current_ip = initial_ip
         
         rotation_count = 0
@@ -295,24 +362,29 @@ class IPRotator:
                 # Perform IP rotation
                 if self.rotate_ip():
                     rotation_count += 1
-                    self.logger.info(f"Completed {rotation_count} IP rotations")
+                    if self.demo_mode:
+                        safe_print(f"✅ Rotation #{rotation_count} complete")
                 else:
-                    self.logger.warning("IP rotation failed, retrying...")
+                    safe_print("⚠️  Rotation failed, retrying...")
                 
-                # Wait for specified interval
-                self.logger.info(f"Waiting {self.interval} seconds until next rotation...")
-                
-                for i in range(self.interval):
-                    if not self.running:
-                        break
-                    time.sleep(1)
+                # Wait for specified interval with countdown
+                if self.running:
+                    safe_print(f"⏳ Waiting {self.interval} seconds...")
+                    for i in range(self.interval):
+                        if not self.running:
+                            break
+                        try:
+                            time.sleep(1)
+                        except KeyboardInterrupt:
+                            raise  # Re-raise to be caught by outer handler
+                    if self.running:  # Only print if we haven't been interrupted
+                        safe_print()
                     
         except KeyboardInterrupt:
-            self.logger.info("Received keyboard interrupt")
+            self.signal_handler(signal.SIGINT, None)
         except Exception as e:
-            self.logger.error(f"Unexpected error: {e}")
-        finally:
-            self.signal_handler(signal.SIGTERM, None)
+            safe_print(f"❌ Unexpected error: {e}")
+            sys.exit(1)
 
 
 def main():
@@ -371,24 +443,25 @@ Examples:
         rotator = IPRotator(interval=args.interval, config_file=args.config, demo_mode=args.demo)
         current_ip = rotator.get_current_ip()
         if current_ip:
-            print(f"Current IP: {current_ip}")
             if args.demo:
-                print("(Running in demo mode)")
+                safe_print(f"📍 Demo IP: {current_ip}")
+            else:
+                safe_print(f"📍 Current IP: {current_ip}")
         else:
-            print("Failed to get current IP")
+            safe_print("❌ Failed to get current IP")
             sys.exit(1)
         return
     
     # Validate interval
     if args.interval < 1:
-        print("Error: Interval must be at least 1 second")
+        safe_print("Error: Interval must be at least 1 second")
         sys.exit(1)
     
     # Start IP rotator
     rotator = IPRotator(interval=args.interval, config_file=args.config, demo_mode=args.demo)
     if args.demo:
-        print("\n🔍 Running in DEMO MODE - IP changes are simulated for demonstration")
-        print("This showcases the tool's functionality without requiring actual VPN configs\n")
+        safe_print("\n🔍 DEMO MODE - Simulated IP rotation for demonstration")
+        safe_print("Perfect for showcasing cybersecurity tool functionality\n")
     rotator.run()
 
 

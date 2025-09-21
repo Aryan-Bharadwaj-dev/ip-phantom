@@ -242,8 +242,20 @@ main() {
         exit 0
     fi
     
-    # Check dependencies
-    check_dependencies
+    # Check dependencies (skip OpenVPN check for demo mode)
+    if [[ "$demo" != "--demo" ]]; then
+        check_dependencies
+    else
+        # Only check Python and curl for demo mode
+        if ! command -v python3 &> /dev/null; then
+            echo -e "${RED}Error: Missing required dependency: python3${NC}"
+            exit 1
+        fi
+        if ! command -v curl &> /dev/null; then
+            echo -e "${RED}Error: Missing required dependency: curl${NC}"
+            exit 1
+        fi
+    fi
     
     # Check if not running as root
     check_root
@@ -287,12 +299,9 @@ main() {
         echo ""
     fi
     
-    # Execute Python script
-    eval "$python_cmd"
+    # Execute Python script - use exec to replace bash process
+    exec python3 "$PYTHON_SCRIPT" --interval $interval --config "$config" $verbose $check_ip $demo
 }
-
-# Handle Ctrl+C
-trap 'echo -e "\n${YELLOW}Shutting down...${NC}"; exit 130' INT
 
 # Run main function
 main "$@"
