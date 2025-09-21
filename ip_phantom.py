@@ -391,9 +391,16 @@ class IPPhantom:
     def start_tor(self) -> bool:
         """Start Tor daemon with our configuration."""
         try:
-            torrc_path = os.path.join(os.getcwd(), 'torrc')
+            # Get the directory where this script is located
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            torrc_path = os.path.join(script_dir, 'torrc')
+            
+            # Fallback to current working directory if not found in script dir
             if not os.path.exists(torrc_path):
-                self.logger.error("Tor configuration file 'torrc' not found")
+                torrc_path = os.path.join(os.getcwd(), 'torrc')
+            
+            if not os.path.exists(torrc_path):
+                self.logger.error(f"Tor configuration file 'torrc' not found in {script_dir} or {os.getcwd()}")
                 return False
             
             # Check if Tor is already running

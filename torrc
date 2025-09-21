@@ -1,12 +1,9 @@
 # Tor configuration for IP Rotator
-# SOCKS proxy on port 9050
-SocksPort 9050
+# SOCKS proxy on port 9050 (localhost only)
+SocksPort 127.0.0.1:9050
 
 # Control port for circuit management (IP rotation)
-ControlPort 9051
-
-# Allow connections from localhost only
-SocksBindAddress 127.0.0.1
+ControlPort 127.0.0.1:9051
 
 # Enable control port authentication (no password for localhost)
 CookieAuthentication 1
@@ -30,8 +27,7 @@ MaxCircuitDirtiness 300
 
 # Disable client-side DNS for better anonymity
 AutomapHostsOnResolve 1
-DNSPort 9053
-DNSListenAddress 127.0.0.1
+DNSPort 127.0.0.1:9053
 
 # Performance optimizations
 NumEntryGuards 8
