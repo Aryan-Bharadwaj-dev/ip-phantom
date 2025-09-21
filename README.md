@@ -9,7 +9,7 @@
 
 ## 🎆 **New in v3.0 - IP Phantom!**
 
-✨ **Revolutionary FREE IP Rotation:**
+✨ **Revolutionary FREE IP Changing:**
 - 🆓 **100% Free** - No VPN subscriptions required!
 - 🌐 **Tor Integration** - Real IP changing using Tor network
 - 👻 **Phantom Mode** - Your real IP vanishes, new anonymous identity appears
@@ -49,7 +49,7 @@ python3 ip_phantom.py --check-ip
 - **👻 Real IP Changing** - Actually changes your IP address using Tor
 - **🎯 Demo Mode** - Perfect for presentations and demonstrations
 - **🔒 Anonymous Browsing** - Routes traffic through Tor network
-- **⚡ Easy to Use** - One command to start rotating IPs
+- **⚡ Easy to Use** - One command to start changing IPs
 - **🛡️ Security Focused** - Built with cybersecurity best practices
 - **🎨 Professional UI** - Clean terminal output with emojis
 - **⏱️ Customizable Intervals** - Set IP changing frequency (1-86400 seconds)
@@ -220,10 +220,11 @@ ip-phantom --help
 
 ## 🔧 Configuration
 
-### VPN Setup
-1. **Get VPN configurations** from your provider
-2. **Run setup wizard**: `./ip-rotator --setup`
-3. **Edit config file**: `config.json`
+### Tor Configuration
+The tool automatically creates and manages Tor configuration. For advanced users:
+1. **Edit Tor config**: `torrc` file in project directory
+2. **Edit IP Phantom config**: `config.json`
+3. **Custom intervals**: Use `--interval` option
 
 ### Sample Configuration
 ```json
@@ -306,13 +307,13 @@ ip-phantom --demo --interval 5    # Works anywhere!
 
 ### Quick Debug with Demo Mode
 ```bash
-# Test basic functionality without VPN dependencies
-ip-rotator --demo --check-ip
+# Test basic functionality without dependencies
+ip-phantom --demo --check-ip
 # or
-./ip-rotator --demo --check-ip
+./ip-phantom --demo --check-ip
 
-# Test rotation with verbose output
-ip-rotator --demo --verbose --interval 5
+# Test IP changing with verbose output
+ip-phantom --demo --verbose --interval 5
 ```
 
 ### Common Issues
@@ -320,7 +321,7 @@ ip-rotator --demo --verbose --interval 5
 #### Permission Errors
 ```bash
 # Fix script permissions
-chmod +x ip-rotator ip_rotator.py
+chmod +x ip-phantom ip_phantom.py
 
 # Verify Python access
 python3 --version
@@ -329,10 +330,10 @@ python3 --version
 #### Python Errors
 ```bash
 # Test in demo mode (no dependencies needed)
-python3 ip_rotator.py --demo --check-ip
+python3 ip_phantom.py --demo --check-ip
 
 # Test Python script directly
-python3 ip_rotator.py --check-ip --verbose
+python3 ip_phantom.py --check-ip --verbose
 ```
 
 ## 🤝 Contributing
@@ -345,7 +346,7 @@ We welcome contributions from the cybersecurity community!
 - Update documentation for changes
 - Ensure security best practices
 - Test on multiple platforms
-- Test both real VPN mode and demo mode
+- Test both real Tor mode and demo mode
 
 ## 📄 License
 
