@@ -421,10 +421,11 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
-- OpenVPN community for excellent VPN software
-- Security researchers who inspired this project
-- VPN providers who enable privacy protection
-- Open-source cybersecurity community
+- **The Tor Project** for creating the anonymous network that powers IP Phantom
+- **Tor developers and volunteers** who maintain the global Tor network infrastructure
+- **Security researchers** who inspired this project and promote digital privacy
+- **Open-source cybersecurity community** for advancing privacy tools and techniques
+- **Anonymous exit node operators** who provide the infrastructure for true anonymity
 
 ---
 
