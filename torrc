@@ -1,0 +1,38 @@
+# Tor configuration for IP Rotator
+# SOCKS proxy on port 9050
+SocksPort 9050
+
+# Control port for circuit management (IP rotation)
+ControlPort 9051
+
+# Allow connections from localhost only
+SocksBindAddress 127.0.0.1
+
+# Enable control port authentication (no password for localhost)
+CookieAuthentication 1
+CookieAuthFile /tmp/tor-control-cookie
+
+# Circuit build timeout
+CircuitBuildTimeout 30
+
+# Directory for Tor data
+DataDirectory /tmp/tor-data
+
+# Log configuration (minimal for production)
+Log notice stdout
+
+# Use diverse exit nodes for better IP rotation
+# ExitNodes are selected automatically for diversity
+
+# Circuit settings for better IP rotation
+NewCircuitPeriod 60
+MaxCircuitDirtiness 300
+
+# Disable client-side DNS for better anonymity
+AutomapHostsOnResolve 1
+DNSPort 9053
+DNSListenAddress 127.0.0.1
+
+# Performance optimizations
+NumEntryGuards 8
+NumDirectoryGuards 3

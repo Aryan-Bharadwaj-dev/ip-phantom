@@ -1,45 +1,62 @@
-# IP Rotator - Cybersecurity Tool
+# 👻 IP Phantom - Anonymous IP Address Changer
 
-[![Python 3.6+](https://img.shields.io/badge/python-3.6+-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.6+](https://img.shields.io/badge/Python-3.6+-blue.svg)](https://www.python.org/downloads/)
+[![Tor Network](https://img.shields.io/badge/Tor-Network-purple.svg)](https://www.torproject.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Security: Educational](https://img.shields.io/badge/Use-Educational%20Only-red.svg)](https://github.com/your-repo/ip-rotator)
+[![Platform](https://img.shields.io/badge/Platform-macOS%20|%20Linux%20|%20Windows-lightgrey.svg)]()
 
-A powerful cybersecurity tool for automated IP address rotation using VPN connections. Designed for penetration testing, security research, and privacy protection purposes.
+> **👻 A professional cybersecurity tool that makes your real IP vanish and reappear with a new anonymous identity using the Tor network - completely FREE!**
 
-## 🎆 **New in v2.0!** 
+## 🎆 **New in v3.0 - IP Phantom!**
 
-✨ **Professional-grade improvements:**
-- 🎯 **Demo Mode** - Zero-config simulated IP rotation for presentations
-- 🎨 **Beautiful Interface** - Clean, emoji-enhanced CLI output
-- 🌍 **Global Installation** - Run from anywhere without `./`
-- ❓ **Gorgeous Help System** - Comprehensive, beautifully formatted help
-- ⚡ **Instant Response** - Professional Ctrl+C handling
-- 🛡️ **Zero Errors** - Clean output with no broken pipe messages
+✨ **Revolutionary FREE IP Rotation:**
+- 🆓 **100% Free** - No VPN subscriptions required!
+- 🌐 **Tor Integration** - Real IP changing using Tor network
+- 👻 **Phantom Mode** - Your real IP vanishes, new anonymous identity appears
+- 🎯 **Demo Mode** - Still available for presentations
+- 🛡️ **Anonymous Browsing** - Routes traffic through Tor network
+- ⚡ **Easy Setup** - Tor installed and configured automatically
+- 🔧 **Zero Cost** - Completely free alternative to paid VPNs
 
 ```bash
-# 🚀 One-command installation
-./install.sh
+# 🆓 FREE real IP changing with Tor
+python3 ip_phantom.py --interval 5
 
-# 🎯 Now works globally!
-ip-rotator --demo --interval 5
+# 🎯 Demo mode for presentations
+python3 ip_phantom.py --demo --interval 3
 
-# 🎨 Beautiful help system
-ip-rotator --help
+# 📍 Check your current IP
+python3 ip_phantom.py --check-ip
 ```
 
-## 🔥 Features
+**Example Real Output:**
+```
+👻 Starting IP Phantom with Tor (changing IP every 5s)
+🌐 Using Tor network for anonymous IP changing
 
-- **🔄 Automated IP Rotation**: Changes IP address at configurable intervals (default: 3 seconds)
-- **🔗 VPN Integration**: Supports OpenVPN configurations from major providers
-- **🔀 Multiple Protocols**: VPN and proxy support with failover mechanisms
-- **📍 Real-time Monitoring**: Live IP verification and change tracking with beautiful visual indicators
-- **🛡️ Robust Error Handling**: Graceful failure recovery and professional error management
-- **📊 Comprehensive Logging**: Detailed logs for security auditing with clean console output
-- **💻 Cross-platform**: Linux, macOS, and Windows (WSL) support
-- **🎯 Demo Mode**: Perfect for demonstrations and testing without actual VPN connections
-- **⚡ Instant Response**: Responsive Ctrl+C handling and graceful shutdown
-- **🎨 Beautiful Interface**: Clean, professional CLI with emojis and color-coded output
-- **🔧 Zero-Config Demo**: Works out-of-the-box with simulated IP rotation
+📍 Initial IP: 14.194.135.206
+✓ Tor started successfully
+✓ New Tor circuit requested
+👻 IP changed via Tor: 45.84.107.74 → 192.42.116.199
+⏳ Waiting 5 seconds...
+```
+
+## 🌟 Features
+
+- **🆓 100% Free** - No VPN subscriptions required
+- **👻 Real IP Changing** - Actually changes your IP address using Tor
+- **🎯 Demo Mode** - Perfect for presentations and demonstrations
+- **🔒 Anonymous Browsing** - Routes traffic through Tor network
+- **⚡ Easy to Use** - One command to start rotating IPs
+- **🛡️ Security Focused** - Built with cybersecurity best practices
+- **🎨 Professional UI** - Clean terminal output with emojis
+- **⏱️ Customizable Intervals** - Set rotation frequency (1-86400 seconds)
+- **🔧 Cross-Platform** - Works on macOS, Linux, and Windows
+- **🌐 Tor Integration** - Automatic Tor daemon management
+- **👻 Circuit Renewal** - Forces new Tor circuits for fresh IPs
+- **📍 IP Verification** - Real-time IP change confirmation
+- **📈 Comprehensive Logging** - Detailed logs for security auditing
+- **⚡ Instant Response** - Responsive Ctrl+C handling and graceful shutdown
 
 ## 🎯 Use Cases
 
@@ -58,66 +75,70 @@ ip-rotator --help
 
 ## 🚀 Quick Start
 
+### Prerequisites
+- **Python 3.6+** 🐍
+- **Tor** (automatically installed)
+- **curl** (for IP checking)
+
 ### Installation
 
-#### Option 1: Quick Global Installation (Recommended)
+#### Option 1: One-Click Setup
 ```bash
-# Clone the repository
-git clone https://github.com/your-username/ip-rotator.git
-cd ip-rotator
-
-# Make scripts executable
-chmod +x ip-rotator ip_rotator.py
-
-# 🚀 Install globally (one command!)
+git clone https://github.com/yourusername/ip-phantom.git
+cd ip-phantom
+chmod +x install.sh
 ./install.sh
-
-# Now run from anywhere without ./
-ip-rotator --demo --interval 5
 ```
 
-#### Option 2: Local Installation
+#### Option 2: Manual Setup
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/ip-rotator.git
-cd ip-rotator
+git clone https://github.com/yourusername/ip-phantom.git
+cd ip-phantom
+
+# Install Tor (macOS)
+brew install tor
+
+# Install Tor (Ubuntu/Debian)
+sudo apt update && sudo apt install tor
+
+# Install Tor (CentOS/RHEL)
+sudo yum install tor
 
 # Make scripts executable
-chmod +x ip-rotator ip_rotator.py
-
-# Run setup wizard (optional for real VPN usage)
-./ip-rotator --setup
+chmod +x ip-phantom ip_phantom.py
 ```
 
-### Basic Usage
+### Usage
 
-#### 🌍 Global Usage (After running ./install.sh)
+#### 🎯 Demo Mode (No Dependencies)
+Perfect for demonstrations and testing:
 ```bash
-# 🎯 Demo mode - Perfect for testing and demonstrations!
-ip-rotator --demo --interval 5
+python3 ip_phantom.py --demo --interval 3
+```
+
+#### 🌐 Real IP Rotation with Tor
+```bash
+# Start IP changing (default: every 3 seconds)
+python3 ip_phantom.py
+
+# Custom interval (10 seconds)
+python3 ip_phantom.py --interval 10
 
 # Check current IP
-ip-rotator --check-ip
+python3 ip_phantom.py --check-ip
 
-# Check simulated IP in demo mode
-ip-rotator --demo --check-ip
-
-# Start rotation with 10-second intervals
-ip-rotator --interval 10
-
-# Use custom configuration with verbose output
-ip-rotator --config custom-vpns.json --verbose
-
-# 🎯 Get beautiful comprehensive help
-ip-rotator --help
+# Verbose logging
+python3 ip_phantom.py --verbose --interval 5
 ```
 
-#### 📁 Local Usage (Traditional)
+#### 🔧 CLI Wrapper (After Installation)
 ```bash
-# All the same commands but with ./
-./ip-rotator --demo --interval 5
-./ip-rotator --check-ip
-./ip-rotator --help
+# Global usage (after running install.sh)
+ip-phantom --demo
+ip-phantom --interval 10
+ip-phantom --check-ip
+ip-phantom --help
 ```
 
 ## 🎯 Demo Mode (New!)

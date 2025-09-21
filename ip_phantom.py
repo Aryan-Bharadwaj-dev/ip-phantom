@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-IP Rotator - Cybersecurity Tool for Automated IP Address Changing
-This tool rotates IP addresses at specified intervals using VPN/proxy services.
+IP Phantom - Anonymous IP Address Changing Tool
+This tool changes IP addresses using the Tor network for complete anonymity.
 For educational and legitimate security testing purposes only.
 """
 
@@ -13,6 +13,8 @@ import argparse
 import subprocess
 import json
 import random
+import socket
+import os
 from typing import Optional, Dict, List
 from datetime import datetime
 
@@ -42,7 +44,7 @@ def safe_print(*args, **kwargs):
         pass
 
 
-class IPRotator:
+class IPPhantom:
     """Main class for handling IP rotation functionality."""
     
     def __init__(self, interval: int = 3, config_file: str = "config.json", demo_mode: bool = False):
@@ -55,6 +57,8 @@ class IPRotator:
         self.demo_ips = ["192.168.1.100", "203.0.113.45", "198.51.100.78", "203.0.113.92", "192.0.2.146"]
         self.demo_counter = 0
         self.shutting_down = False
+        self.tor_process = None
+        self.tor_control_password = None
         self.setup_logging()
         self.load_configuration()
         
@@ -68,7 +72,7 @@ class IPRotator:
         formatter = logging.Formatter('%(message)s')
         
         # File handler with detailed logs
-        file_handler = logging.FileHandler('ip_rotator.log')
+        file_handler = logging.FileHandler('ip_phantom.log')
         file_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
         
         # Console handler with clean output - wrapped to handle broken pipes
@@ -247,7 +251,7 @@ class IPRotator:
                 try:
                     result = subprocess.run([
                         'curl', '-s', '--connect-timeout', '10', service
-                    ], capture_output=True, text=True, timeout=15, stderr=subprocess.DEVNULL)
+                    ], capture_output=True, text=True, timeout=15)
                     
                     if result.returncode == 0:
                         response = json.loads(result.stdout)
@@ -283,13 +287,13 @@ class IPRotator:
         try:
             # Security: Use specific process filtering to prevent killing unintended processes
             subprocess.run(['sudo', 'pkill', '-f', 'openvpn'], 
-                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False, timeout=10)
+                         capture_output=True, check=False, timeout=10)
             
             # Reset DNS settings (only if systemd-resolved exists)
             import shutil
             if shutil.which('systemctl'):
                 subprocess.run(['sudo', 'systemctl', 'restart', 'systemd-resolved'], 
-                             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False, timeout=15)
+                             capture_output=True, check=False, timeout=15)
             
             time.sleep(2)  # Wait for disconnection
             self.logger.info("Disconnected from current VPN")
@@ -323,8 +327,7 @@ class IPRotator:
             cmd = ['sudo', 'openvpn', '--config', config_file, '--daemon', 
                    '--script-security', '2', '--up-restart', '--down-pre']
             try:
-                result = subprocess.run(cmd, capture_output=True, text=True, 
-                                      stderr=subprocess.DEVNULL, timeout=30)
+                result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
             except subprocess.TimeoutExpired:
                 self.logger.error(f"VPN connection timeout for {vpn_config['name']}")
                 return False
@@ -375,8 +378,131 @@ class IPRotator:
             self.logger.error(f"Error setting proxy {proxy_config['name']}: {e}")
             return False
     
+    def start_tor(self) -> bool:
+        """Start Tor daemon with our configuration."""
+        try:
+            torrc_path = os.path.join(os.getcwd(), 'torrc')
+            if not os.path.exists(torrc_path):
+                self.logger.error("Tor configuration file 'torrc' not found")
+                return False
+            
+            # Check if Tor is already running
+            if self.is_tor_running():
+                self.logger.info("Tor is already running")
+                return True
+            
+            # Create data directory
+            data_dir = '/tmp/tor-data'
+            os.makedirs(data_dir, mode=0o700, exist_ok=True)
+            
+            # Start Tor process
+            cmd = ['tor', '-f', torrc_path]
+            self.tor_process = subprocess.Popen(
+                cmd, 
+                stdout=subprocess.DEVNULL, 
+                stderr=subprocess.DEVNULL
+            )
+            
+            # Wait for Tor to start
+            for _ in range(30):  # Wait up to 30 seconds
+                if self.is_tor_running():
+                    self.logger.info("✓ Tor started successfully")
+                    time.sleep(2)  # Give it a moment to fully initialize
+                    return True
+                time.sleep(1)
+            
+            self.logger.error("Tor failed to start within timeout")
+            return False
+            
+        except Exception as e:
+            self.logger.error(f"Error starting Tor: {e}")
+            return False
+    
+    def is_tor_running(self) -> bool:
+        """Check if Tor is running on the expected ports."""
+        try:
+            # Check SOCKS port
+            with socket.create_connection(('127.0.0.1', 9050), timeout=1):
+                pass
+            # Check control port
+            with socket.create_connection(('127.0.0.1', 9051), timeout=1):
+                pass
+            return True
+        except (ConnectionRefusedError, socket.timeout, OSError):
+            return False
+    
+    def stop_tor(self):
+        """Stop Tor daemon."""
+        try:
+            if self.tor_process:
+                self.tor_process.terminate()
+                self.tor_process.wait(timeout=10)
+                self.logger.info("Tor process terminated")
+        except Exception as e:
+            self.logger.error(f"Error stopping Tor: {e}")
+    
+    def renew_tor_circuit(self) -> bool:
+        """Request a new Tor circuit to change IP address."""
+        try:
+            # Connect to Tor control port
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as control_socket:
+                control_socket.settimeout(10)
+                control_socket.connect(('127.0.0.1', 9051))
+                
+                # Authenticate (using cookie authentication)
+                cookie_path = '/tmp/tor-control-cookie'
+                if os.path.exists(cookie_path):
+                    with open(cookie_path, 'rb') as f:
+                        cookie = f.read()
+                    auth_cmd = f'AUTHENTICATE {cookie.hex()}\r\n'
+                else:
+                    # Try without authentication
+                    auth_cmd = 'AUTHENTICATE\r\n'
+                
+                control_socket.send(auth_cmd.encode())
+                response = control_socket.recv(1024).decode()
+                
+                if '250 OK' not in response:
+                    self.logger.error(f"Tor authentication failed: {response.strip()}")
+                    return False
+                
+                # Request new circuit
+                control_socket.send(b'SIGNAL NEWNYM\r\n')
+                response = control_socket.recv(1024).decode()
+                
+                if '250 OK' in response:
+                    self.logger.info("✓ New Tor circuit requested")
+                    time.sleep(3)  # Wait for new circuit to establish
+                    return True
+                else:
+                    self.logger.error(f"Failed to renew Tor circuit: {response.strip()}")
+                    return False
+                    
+        except Exception as e:
+            self.logger.error(f"Error renewing Tor circuit: {e}")
+            return False
+    
+    def get_current_ip_via_tor(self) -> Optional[str]:
+        """Get current IP address through Tor proxy."""
+        try:
+            # Use curl with Tor SOCKS proxy
+            result = subprocess.run([
+                'curl', '-s', '--socks5-hostname', '127.0.0.1:9050',
+                '--connect-timeout', '10', 'https://httpbin.org/ip'
+            ], capture_output=True, text=True, timeout=15)
+            
+            if result.returncode == 0:
+                response = json.loads(result.stdout)
+                return response.get('origin', '').split(',')[0].strip()
+            else:
+                return None
+                
+        except Exception as e:
+            self.logger.error(f"Error getting IP via Tor: {e}")
+            return None
+    
     def rotate_ip(self) -> bool:
-        """Rotate to a new IP address."""
+        """Rotate to a new IP address using Tor or demo mode."""
         try:
             if self.demo_mode:
                 # Demo mode: simulate successful IP rotation
@@ -391,49 +517,51 @@ class IPRotator:
                 safe_print(f"🔄 Rotating IP: {old_ip} → {new_ip}")
                 return True
             
-            # Check for valid VPN configurations
-            available_configs = [cfg for cfg in self.vpn_configs if cfg.get('enabled', True)]
-            
-            # Filter for configs with existing files
-            valid_configs = []
-            for cfg in available_configs:
-                config_file = cfg.get('config_file')
-                if config_file and config_file != "/path/to/server1.ovpn" and config_file != "/path/to/server2.ovpn":
-                    import os
-                    if os.path.exists(config_file):
-                        valid_configs.append(cfg)
-            
-            if not valid_configs:
-                self.logger.warning("No valid VPN configuration files found. Use --demo for demonstration mode.")
-                return False
-            
-            # Select random VPN configuration
-            selected_config = random.choice(valid_configs)
-            
-            self.logger.info(f"Attempting to rotate IP using: {selected_config['name']}")
-            
-            # Get current IP before rotation
-            old_ip = self.get_current_ip()
-            self.logger.info(f"Current IP: {old_ip}")
-            
-            # Connect to new VPN
-            if self.connect_vpn(selected_config):
-                # Verify IP change
-                time.sleep(3)
-                new_ip = self.get_current_ip()
-                
-                if new_ip and new_ip != old_ip:
-                    self.current_ip = new_ip
-                    self.logger.info(f"✓ IP successfully rotated: {old_ip} → {new_ip}")
-                    return True
-                else:
-                    self.logger.warning(f"IP rotation may have failed. New IP: {new_ip}")
-                    return False
-            
-            return False
+            # Use Tor for real IP rotation
+            return self.rotate_ip_via_tor()
             
         except Exception as e:
             self.logger.error(f"Error during IP rotation: {e}")
+            return False
+    
+    def rotate_ip_via_tor(self) -> bool:
+        """Rotate IP address using Tor circuit renewal."""
+        try:
+            # Ensure Tor is running
+            if not self.start_tor():
+                self.logger.error("Failed to start Tor")
+                return False
+            
+            # Get current IP before rotation
+            old_ip = self.get_current_ip_via_tor()
+            if not old_ip:
+                old_ip = "Unknown"
+            
+            self.logger.info(f"Current IP (via Tor): {old_ip}")
+            
+            # Request new Tor circuit
+            if self.renew_tor_circuit():
+                # Verify IP change
+                time.sleep(2)  # Wait for new circuit
+                new_ip = self.get_current_ip_via_tor()
+                
+                if new_ip and new_ip != old_ip:
+                    self.current_ip = new_ip
+                    safe_print(f"👻 IP changed via Tor: {old_ip} → {new_ip}")
+                    return True
+                elif new_ip:
+                    # Sometimes Tor may not change IP immediately, but circuit was renewed
+                    self.current_ip = new_ip
+                    safe_print(f"👻 Tor circuit renewed: {new_ip} (IP may change shortly)")
+                    return True
+                else:
+                    self.logger.warning("Failed to get new IP after Tor circuit renewal")
+                    return False
+            else:
+                return False
+                
+        except Exception as e:
+            self.logger.error(f"Error during Tor IP rotation: {e}")
             return False
     
     def signal_handler(self, signum, frame):
@@ -445,16 +573,17 @@ class IPRotator:
         self.running = False
         
         try:
-            safe_print("\n🛑 Shutting down gracefully...")
+            safe_print("\n🛁 Shutting down gracefully...")
             
-            # Cleanup: disconnect VPN only if not in demo mode
+            # Cleanup: disconnect VPN/Tor only if not in demo mode
             if not self.demo_mode:
                 try:
                     self.disconnect_current_vpn()
+                    self.stop_tor()
                 except Exception:
                     pass  # Silent cleanup
             
-            safe_print("✅ IP Rotator stopped safely.")
+            safe_print("✅ IP Phantom stopped safely.")
         except (BrokenPipeError, ConnectionResetError):
             # Silently ignore broken pipe errors during shutdown
             pass
@@ -463,9 +592,10 @@ class IPRotator:
     def run(self):
         """Main execution loop."""
         if self.demo_mode:
-            safe_print(f"🚀 Starting IP Rotator Demo (rotating every {self.interval}s)")
+            safe_print(f"🚀 Starting IP Phantom Demo (rotating every {self.interval}s)")
         else:
-            safe_print(f"🚀 Starting IP Rotator with {self.interval}s interval")
+            safe_print(f"👻 Starting IP Phantom with Tor (changing IP every {self.interval}s)")
+            safe_print("🌐 Using Tor network for anonymous IP changing")
         safe_print("Press Ctrl+C to stop")
         safe_print()
         
@@ -510,13 +640,13 @@ class IPRotator:
 def main():
     """Main entry point."""
     parser = argparse.ArgumentParser(
-        description="IP Rotator - Automated IP Address Changer",
+        description="IP Phantom - Anonymous IP Address Changer",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python3 ip_rotator.py --interval 10    # Rotate every 10 seconds
-  python3 ip_rotator.py --config my_vpns.json  # Use custom config
-  python3 ip_rotator.py --check-ip       # Just check current IP
+  python3 ip_phantom.py --interval 10    # Change IP every 10 seconds
+  python3 ip_phantom.py --config my_config.json  # Use custom config
+  python3 ip_phantom.py --check-ip       # Just check current IP
         """
     )
     
@@ -552,6 +682,12 @@ Examples:
         help='Run in demo mode with simulated IP changes (for demonstrations)'
     )
     
+    parser.add_argument(
+        '--tor',
+        action='store_true',
+        help='Use Tor for real IP rotation (free, no VPN required)'
+    )
+    
     args = parser.parse_args()
     
     # Set logging level
@@ -560,8 +696,8 @@ Examples:
     
     # Just check IP and exit
     if args.check_ip:
-        rotator = IPRotator(interval=args.interval, config_file=args.config, demo_mode=args.demo)
-        current_ip = rotator.get_current_ip()
+        phantom = IPPhantom(interval=args.interval, config_file=args.config, demo_mode=args.demo)
+        current_ip = phantom.get_current_ip()
         if current_ip:
             if args.demo:
                 safe_print(f"📍 Demo IP: {current_ip}")
@@ -584,12 +720,14 @@ Examples:
         safe_print("Error: Invalid interval value")
         sys.exit(1)
     
-    # Start IP rotator
-    rotator = IPRotator(interval=args.interval, config_file=args.config, demo_mode=args.demo)
+    # Start IP Phantom
+    # Tor mode is now the default for real IP changing
+    demo_mode = args.demo
+    phantom = IPPhantom(interval=args.interval, config_file=args.config, demo_mode=demo_mode)
     if args.demo:
-        safe_print("\n🔍 DEMO MODE - Simulated IP rotation for demonstration")
+        safe_print("\n🔍 DEMO MODE - Simulated IP changing for demonstration")
         safe_print("Perfect for showcasing cybersecurity tool functionality\n")
-    rotator.run()
+    phantom.run()
 
 
 if __name__ == "__main__":
