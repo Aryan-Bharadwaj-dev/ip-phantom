@@ -77,6 +77,7 @@ show_help() {
     echo "  --setup                  🛠️  Run interactive setup wizard"
     echo "  --stop                   🛑 Stop all running VPN connections"
     echo "  --demo                   🎯 Run in demo mode (simulated IP changes)"
+    echo "  --setup-passwordless     🔑 Configure passwordless sudo (recommended)"
     echo ""
     echo -e "${YELLOW}✨ QUICK START EXAMPLES:${NC}"
     echo -e "  ${GREEN}# 🎯 Demo Mode - Perfect for presentations!${NC}"
@@ -126,6 +127,10 @@ show_help() {
     echo -e "  ${GREEN}Test basic functionality:${NC}"
     echo "  $COMMAND --demo --check-ip       # Test without VPN"
     echo "  $COMMAND --demo --verbose        # Debug with details"
+    echo ""
+    echo -e "  ${GREEN}Eliminate password prompts during shutdown:${NC}"
+    echo "  $COMMAND --setup-passwordless    # Configure passwordless sudo"
+    echo "  # Or manually: ./setup-passwordless-sudo.sh --install"
     echo ""
     echo -e "  ${GREEN}Permission issues:${NC}"
     if [[ "$COMMAND" == "./ip-rotator" ]]; then
@@ -226,12 +231,18 @@ setup_wizard() {
 stop_vpn() {
     echo -e "${YELLOW}Stopping all VPN connections...${NC}"
     
-    # Kill OpenVPN processes
-    sudo pkill -f openvpn 2>/dev/null
+    # Kill OpenVPN processes - try passwordless sudo first
+    if ! sudo -n pkill -f openvpn 2>/dev/null; then
+        # If passwordless sudo failed, try regular sudo (may prompt for password)
+        sudo pkill -f openvpn 2>/dev/null || true
+    fi
     
-    # Reset DNS
+    # Reset DNS - try passwordless sudo first
     if command -v systemctl &> /dev/null; then
-        sudo systemctl restart systemd-resolved 2>/dev/null
+        if ! sudo -n systemctl restart systemd-resolved 2>/dev/null; then
+            # If passwordless sudo failed, try regular sudo (may prompt for password)
+            sudo systemctl restart systemd-resolved 2>/dev/null || true
+        fi
     fi
     
     echo -e "${GREEN}✓ VPN connections stopped${NC}"
@@ -259,6 +270,7 @@ main() {
     setup=""
     stop=""
     demo=""
+    setup_passwordless=""
     
     while [[ $# -gt 0 ]]; do
         case $1 in
@@ -290,6 +302,10 @@ main() {
                 demo="--demo"
                 shift
                 ;;
+            --setup-passwordless)
+                setup_passwordless=true
+                shift
+                ;;
             -h|--help)
                 show_help
                 exit 0
@@ -314,6 +330,16 @@ main() {
     if [[ "$stop" == true ]]; then
         stop_vpn
         exit 0
+    fi
+    
+    if [[ "$setup_passwordless" == true ]]; then
+        # Run the passwordless sudo setup script
+        if [[ -f "$SCRIPT_DIR/setup-passwordless-sudo.sh" ]]; then
+            exec "$SCRIPT_DIR/setup-passwordless-sudo.sh" --install
+        else
+            echo -e "${RED}Error: setup-passwordless-sudo.sh not found${NC}"
+            exit 1
+        fi
     fi
     
     # Check dependencies (skip OpenVPN check for demo mode)

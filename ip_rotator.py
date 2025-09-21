@@ -276,6 +276,10 @@ class IPRotator:
         if self.demo_mode:
             return  # No actual VPN to disconnect in demo mode
             
+        # If shutting down, skip VPN cleanup to avoid password prompts
+        if self.shutting_down:
+            return
+            
         try:
             # Security: Use specific process filtering to prevent killing unintended processes
             subprocess.run(['sudo', 'pkill', '-f', 'openvpn'], 
@@ -288,12 +292,10 @@ class IPRotator:
                              stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False, timeout=15)
             
             time.sleep(2)  # Wait for disconnection
-            if not self.shutting_down:
-                self.logger.info("Disconnected from current VPN")
+            self.logger.info("Disconnected from current VPN")
             
         except Exception as e:
-            if not self.shutting_down:
-                self.logger.error(f"Error disconnecting VPN: {e}")
+            self.logger.error(f"Error disconnecting VPN: {e}")
     
     def connect_vpn(self, vpn_config: Dict) -> bool:
         """Connect to a VPN server."""
