@@ -54,7 +54,16 @@ class IPPhantom:
         self.current_ip = None
         self.vpn_configs = []
         self.demo_mode = demo_mode
-        self.demo_ips = ["192.168.1.100", "203.0.113.45", "198.51.100.78", "203.0.113.92", "192.0.2.146"]
+        self.demo_ips = [
+            {"ip": "185.220.101.32", "country": "United States", "city": "New York"},
+            {"ip": "146.70.173.85", "country": "Germany", "city": "Frankfurt"},
+            {"ip": "51.89.153.122", "country": "United Kingdom", "city": "London"},
+            {"ip": "198.245.51.147", "country": "Canada", "city": "Toronto"},
+            {"ip": "103.28.121.58", "country": "Japan", "city": "Tokyo"},
+            {"ip": "37.120.145.166", "country": "Netherlands", "city": "Amsterdam"},
+            {"ip": "185.100.87.202", "country": "Switzerland", "city": "Zurich"},
+            {"ip": "192.42.116.199", "country": "France", "city": "Paris"}
+        ]
         self.demo_counter = 0
         self.shutting_down = False
         self.tor_process = None
@@ -237,7 +246,8 @@ class IPPhantom:
         """Get current external IP address."""
         if self.demo_mode:
             # Return simulated IP for demo purposes
-            return self.demo_ips[self.demo_counter % len(self.demo_ips)]
+            current_location = self.demo_ips[self.demo_counter % len(self.demo_ips)]
+            return current_location["ip"]
         
         try:
             # Using multiple IP check services for reliability
@@ -505,16 +515,23 @@ class IPPhantom:
         """Rotate to a new IP address using Tor or demo mode."""
         try:
             if self.demo_mode:
-                # Demo mode: simulate successful IP rotation
-                old_ip = self.get_current_ip()
+                # Demo mode: simulate successful IP changing with country info
+                old_location = self.demo_ips[self.demo_counter % len(self.demo_ips)]
+                old_ip = old_location["ip"]
                 
-                # Simulate rotation delay
-                time.sleep(1)
+                # Simulate connection delay
+                safe_print(f"🔄 Changing IP address...")
+                time.sleep(0.8)  # Realistic connection time
+                
                 self.demo_counter += 1
+                new_location = self.demo_ips[self.demo_counter % len(self.demo_ips)]
+                new_ip = new_location["ip"]
+                country = new_location["country"]
+                city = new_location["city"]
                 
-                new_ip = self.get_current_ip()
                 self.current_ip = new_ip
-                safe_print(f"🔄 Rotating IP: {old_ip} → {new_ip}")
+                safe_print(f"✓ Connected to {country} ({city}) server")
+                safe_print(f"👻 IP changed: {old_ip} → {new_ip}")
                 return True
             
             # Use Tor for real IP rotation
@@ -592,7 +609,7 @@ class IPPhantom:
     def run(self):
         """Main execution loop."""
         if self.demo_mode:
-            safe_print(f"🚀 Starting IP Phantom Demo (rotating every {self.interval}s)")
+            safe_print(f"🚀 Starting IP Phantom Demo (changing IP every {self.interval}s)")
         else:
             safe_print(f"👻 Starting IP Phantom with Tor (changing IP every {self.interval}s)")
             safe_print("🌐 Using Tor network for anonymous IP changing")
@@ -602,7 +619,12 @@ class IPPhantom:
         # Get initial IP
         initial_ip = self.get_current_ip()
         if initial_ip:
-            safe_print(f"📍 Initial IP: {initial_ip}")
+            if self.demo_mode:
+                current_location = self.demo_ips[self.demo_counter % len(self.demo_ips)]
+                safe_print(f"📍 Connected to {current_location['country']} ({current_location['city']}) server")
+                safe_print(f"📍 Current IP: {initial_ip}")
+            else:
+                safe_print(f"📍 Initial IP: {initial_ip}")
             self.current_ip = initial_ip
         
         rotation_count = 0
@@ -613,9 +635,9 @@ class IPPhantom:
                 if self.rotate_ip():
                     rotation_count += 1
                     if self.demo_mode:
-                        safe_print(f"✅ Rotation #{rotation_count} complete")
+                        safe_print(f"✅ Identity change #{rotation_count} complete")
                 else:
-                    safe_print("⚠️  Rotation failed, retrying...")
+                    safe_print("⚠️  Connection failed, retrying...")
                 
                 # Wait for specified interval with countdown
                 if self.running:
@@ -725,7 +747,7 @@ Examples:
     demo_mode = args.demo
     phantom = IPPhantom(interval=args.interval, config_file=args.config, demo_mode=demo_mode)
     if args.demo:
-        safe_print("\n🔍 DEMO MODE - Simulated IP changing for demonstration")
+        safe_print("\n🔍 DEMO MODE - Simulated anonymous server connections")
         safe_print("Perfect for showcasing cybersecurity tool functionality\n")
     phantom.run()
 

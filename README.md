@@ -34,10 +34,12 @@ python3 ip_phantom.py --check-ip
 👻 Starting IP Phantom with Tor (changing IP every 5s)
 🌐 Using Tor network for anonymous IP changing
 
-📍 Initial IP: 14.194.135.206
-✓ Tor started successfully
-✓ New Tor circuit requested
-👻 IP changed via Tor: 45.84.107.74 → 192.42.116.199
+📍 Connected to United States (New York) server
+📍 Current IP: 185.220.101.32
+🔄 Changing IP address...
+✓ Connected to Germany (Frankfurt) server
+👻 IP changed: 185.220.101.32 → 146.70.173.85
+✅ Identity change #1 complete
 ⏳ Waiting 5 seconds...
 ```
 
@@ -50,7 +52,7 @@ python3 ip_phantom.py --check-ip
 - **⚡ Easy to Use** - One command to start rotating IPs
 - **🛡️ Security Focused** - Built with cybersecurity best practices
 - **🎨 Professional UI** - Clean terminal output with emojis
-- **⏱️ Customizable Intervals** - Set rotation frequency (1-86400 seconds)
+- **⏱️ Customizable Intervals** - Set IP changing frequency (1-86400 seconds)
 - **🔧 Cross-Platform** - Works on macOS, Linux, and Windows
 - **🌐 Tor Integration** - Automatic Tor daemon management
 - **👻 Circuit Renewal** - Forces new Tor circuits for fresh IPs
@@ -117,7 +119,7 @@ Perfect for demonstrations and testing:
 python3 ip_phantom.py --demo --interval 3
 ```
 
-#### 🌐 Real IP Rotation with Tor
+#### 🌐 Real IP Changing with Tor
 ```bash
 # Start IP changing (default: every 3 seconds)
 python3 ip_phantom.py
@@ -141,40 +143,27 @@ ip-phantom --check-ip
 ip-phantom --help
 ```
 
-## 🎯 Demo Mode (New!)
-
-Perfect for demonstrations, testing, and showcasing the tool:
-
-```bash
-# Quick demo with 3-second intervals (global)
-ip-rotator --demo --interval 3
-
-# Check simulated IP in demo mode
-ip-rotator --demo --check-ip
-
-# Verbose demo for detailed output
-ip-rotator --demo --interval 5 --verbose
-
-# Or use local version
-./ip-rotator --demo --interval 3
-```
+## 🎯 Demo Mode Features
 
 **Example Demo Output:**
 ```
-🚀 Starting IP Rotator Demo (rotating every 3s)
-Press Ctrl+C to stop
+🚀 Starting IP Phantom Demo (changing IP every 3s)
+📍 Connected to United States (New York) server
+📍 Current IP: 185.220.101.32
 
-📍 Initial IP: 192.168.1.100
-🔄 Rotating IP: 192.168.1.100 → 203.0.113.45
-✅ Rotation #1 complete
+🔄 Changing IP address...
+✓ Connected to Germany (Frankfurt) server
+👻 IP changed: 185.220.101.32 → 146.70.173.85
+✅ Identity change #1 complete
 ⏳ Waiting 3 seconds...
 
-🔄 Rotating IP: 203.0.113.45 → 198.51.100.78
-✅ Rotation #2 complete
-⏳ Waiting 3 seconds...
+🔄 Changing IP address...
+✓ Connected to United Kingdom (London) server
+👻 IP changed: 146.70.173.85 → 51.89.153.122
+✅ Identity change #2 complete
 
-🛑 Shutting down gracefully...
-✅ IP Rotator stopped safely.
+🛁 Shutting down gracefully...
+✅ IP Phantom stopped safely.
 ```
 
 ## 📋 Requirements
@@ -194,94 +183,17 @@ Press Ctrl+C to stop
 
 ## 📚 Usage Examples
 
-### 🎯 Beautiful Help System
+### 🎯 Command Line Options
 
-Get comprehensive help with gorgeous formatting:
+| Option | Description | Example |
+|--------|-------------|---------|
+| `--interval N` | IP change interval in seconds (1-86400) | `--interval 10` |
+| `--demo` | Demo mode with simulated IP changes | `--demo` |
+| `--check-ip` | Check current IP and exit | `--check-ip` |
+| `--verbose` | Enable detailed logging | `--verbose` |
+| `--config FILE` | Custom configuration file | `--config my_config.json` |
+| `--help` | Show help message | `--help` |
 
-```bash
-# Beautiful, comprehensive help page
-ip-rotator --help
-# or
-./ip-rotator --help
-```
-
-**Features gorgeous help with:**
-- 🎨 Emoji-enhanced formatting
-- 📚 Complete command documentation
-- 🎯 Demo mode benefits and features
-- 📋 System requirements breakdown
-- ✨ Quick start examples
-- 🔍 Troubleshooting guide
-- 🚀 Installation tips
-
-**Example Help Output:**
-```
-==================================================================
-                    🎯 IP ROTATOR HELP GUIDE
-==================================================================
-
-IP Rotator - Professional Cybersecurity IP Rotation Tool
-
-📋 USAGE:
-  ip-rotator [OPTIONS]
-
-⚙️  CORE OPTIONS:
-  -i, --interval SECONDS    ⏱️  Time interval between rotations (default: 3)
-  --demo                   🎯 Run in demo mode (simulated IP changes)
-  -h, --help               ❓ Show comprehensive help message
-
-✨ QUICK START EXAMPLES:
-  # 🎯 Demo Mode - Perfect for presentations!
-  ip-rotator --demo --interval 5
-
-🎯 DEMO MODE FEATURES:
-  ✅ Zero dependencies - no VPN setup required
-  ✅ Perfect for cybersecurity demonstrations
-  ✅ Professional visual output with emojis
-  ✅ Instant Ctrl+C response for clean shutdown
-==================================================================
-```
-
-### Complete CLI Reference
-```bash
-Options:
-  -i, --interval SECONDS    ⏱️  Time interval between rotations (default: 3)
-  -c, --config FILE         📁 Configuration file path (default: config.json)
-  -v, --verbose             📊 Enable verbose logging
-  -h, --help               ❓ Show comprehensive help message
-  --check-ip               📍 Check current IP address and exit
-  --setup                  🛠️  Run initial setup wizard
-  --stop                   🛑 Stop all running VPN connections
-  --demo                   🎯 Run in demo mode (simulated IP changes)
-```
-
-### Command Line Examples
-
-#### 🌍 Global Commands (After Installation)
-```bash
-# Basic rotation every 5 seconds
-ip-rotator --interval 5
-
-# Verbose logging with custom config
-ip-rotator --interval 30 --config production.json --verbose
-
-# Just check current IP and location
-ip-rotator --check-ip
-
-# Stop all VPN connections
-ip-rotator --stop
-
-# Beautiful help system
-ip-rotator --help
-```
-
-#### 📁 Local Commands (Traditional)
-```bash
-# All commands work with ./
-./ip-rotator --interval 5
-./ip-rotator --help
-./ip-rotator --demo --interval 3
-```
 
 ## 🛡️ Security Features
 
@@ -295,8 +207,8 @@ ip-rotator --help
 
 ### 📊 Monitoring & Logging
 - **Real-time IP verification**: Confirms successful IP changes with visual indicators
-- **Comprehensive logs**: Detailed logging to `ip_rotator.log` with clean console output
-- **Error tracking**: Failed rotation attempts and recovery actions
+- **Comprehensive logs**: Detailed logging to `ip_phantom.log` with clean console output
+- **Error tracking**: Failed connection attempts and recovery actions
 - **Connection audit**: VPN connection/disconnection events
 - **Professional output**: Clean, emoji-enhanced status messages
 
@@ -339,7 +251,7 @@ ip-rotator --help
       "enabled": false
     }
   ],
-  "rotation_method": "vpn",
+  "phantom_method": "tor",
   "check_ip_url": "https://httpbin.org/ip"
 }
 ```
@@ -356,7 +268,7 @@ This tool is provided for **educational and authorized security testing purposes
 - Personal privacy protection on your own systems
 - Academic research and cybersecurity education
 - Security testing of systems you own or have explicit permission to test
-- Bug bounty programs where IP rotation is permitted
+- Bug bounty programs where IP changing is permitted
 - Demonstrations and training in controlled environments
 
 ❌ **PROHIBITED:**
@@ -386,10 +298,10 @@ This tool is provided for **educational and authorized security testing purposes
 #### Usage Flexibility
 ```bash
 # 🌍 Global (recommended)
-ip-rotator --demo --interval 5    # Works anywhere!
+ip-phantom --demo --interval 5    # Works anywhere!
 
 # 📁 Local (still supported)
-./ip-rotator --demo --interval 5  # Works in project directory
+./ip-phantom --demo --interval 5  # Works in project directory
 ```
 
 ### Quick Debug with Demo Mode
