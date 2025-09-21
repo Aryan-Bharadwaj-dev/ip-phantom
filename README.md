@@ -7,58 +7,57 @@
 
 > **👻 A professional cybersecurity tool that makes your real IP vanish and reappear with a new anonymous identity using the Tor network - completely FREE!**
 
-## 🎆 **New in v3.0 - IP Phantom!**
+## 🌐 **IP Phantom - Tor-Based Anonymous IP Changing**
 
-✨ **Revolutionary FREE IP Changing:**
-- 🆓 **100% Free** - No VPN subscriptions required!
-- 🌐 **Tor Integration** - Real IP changing using Tor network
-- 👻 **Phantom Mode** - Your real IP vanishes, new anonymous identity appears
-- 🎯 **Demo Mode** - Still available for presentations
-- 🛡️ **Anonymous Browsing** - Routes traffic through Tor network
+✨ **Real Anonymous IP Changing:**
+- 🆓 **100% Free** - No VPN subscriptions or paid services required
+- 🌐 **Tor Network** - Uses the Tor anonymity network for real IP changes
+- 👻 **Automatic IP Rotation** - Changes your public IP address every specified interval
+- 🛡️ **Anonymous Browsing** - Routes all traffic through Tor network
 - ⚡ **Easy Setup** - Tor installed and configured automatically
-- 🔧 **Zero Cost** - Completely free alternative to paid VPNs
+- 🔧 **Zero Cost** - Completely free alternative to paid VPN services
+- 🎯 **Demo Mode** - Available for testing and presentations
 
 ```bash
-# 🆓 FREE real IP changing with Tor
-python3 ip_phantom.py --interval 5
+# 🆓 Real IP changing with Tor network (main feature)
+ip-phantom --interval 10
 
-# 🎯 Demo mode for presentations
-python3 ip_phantom.py --demo --interval 3
+# 📍 Check your current IP address
+ip-phantom --check-ip
 
-# 📍 Check your current IP
-python3 ip_phantom.py --check-ip
+# 🎯 Demo mode (for testing/presentations)
+ip-phantom --demo --interval 3
 ```
 
 **Example Real Output:**
 ```
-👻 Starting IP Phantom with Tor (changing IP every 5s)
+👻 Starting IP Phantom with Tor (changing IP every 10s)
 🌐 Using Tor network for anonymous IP changing
+Press Ctrl+C to stop
 
-📍 Connected to United States (New York) server
-📍 Current IP: 185.220.101.32
+📍 Initial IP: 14.194.135.206
 🔄 Changing IP address...
-✓ Connected to Germany (Frankfurt) server
-👻 IP changed: 185.220.101.32 → 146.70.173.85
+✓ Tor started successfully
+👻 IP changed via Tor: 14.194.135.206 → 185.220.101.32
 ✅ Identity change #1 complete
-⏳ Waiting 5 seconds...
+⏳ Waiting 10 seconds...
 ```
 
 ## 🌟 Features
 
-- **🆓 100% Free** - No VPN subscriptions required
-- **👻 Real IP Changing** - Actually changes your IP address using Tor
-- **🎯 Demo Mode** - Perfect for presentations and demonstrations
-- **🔒 Anonymous Browsing** - Routes traffic through Tor network
-- **⚡ Easy to Use** - One command to start changing IPs
-- **🛡️ Security Focused** - Built with cybersecurity best practices
-- **🎨 Professional UI** - Clean terminal output with emojis
+- **🌐 Real IP Changing** - Actually changes your public IP address using Tor network
+- **🆓 100% Free** - No VPN subscriptions or paid services required
+- **🛡️ Anonymous Browsing** - Routes all traffic through Tor for complete anonymity
+- **⚡ Automatic Setup** - Tor installed and configured automatically
+- **👻 Circuit Renewal** - Forces new Tor circuits for fresh IP addresses
+- **📍 Real-time Verification** - Confirms successful IP changes immediately
 - **⏱️ Customizable Intervals** - Set IP changing frequency (1-86400 seconds)
 - **🔧 Cross-Platform** - Works on macOS, Linux, and Windows
-- **🌐 Tor Integration** - Automatic Tor daemon management
-- **👻 Circuit Renewal** - Forces new Tor circuits for fresh IPs
-- **📍 IP Verification** - Real-time IP change confirmation
-- **📈 Comprehensive Logging** - Detailed logs for security auditing
-- **⚡ Instant Response** - Responsive Ctrl+C handling and graceful shutdown
+- **📈 Security Logging** - Detailed logs for security auditing
+- **⚡ Professional UI** - Clean terminal output with visual indicators
+- **🔒 Security Focused** - Built with cybersecurity best practices
+- **🎯 Demo Mode** - Available for testing and presentations
+- **⚡ Graceful Shutdown** - Responsive Ctrl+C handling
 
 ## 🎯 Use Cases
 
@@ -84,13 +83,17 @@ python3 ip_phantom.py --check-ip
 
 ### Installation
 
-#### Option 1: One-Click Setup
+#### Option 1: Automatic Installation (Recommended)
 ```bash
 git clone https://github.com/yourusername/ip-phantom.git
 cd ip-phantom
 chmod +x install.sh
 ./install.sh
 ```
+This will:
+- Install Tor automatically if not present
+- Set up global `ip-phantom` command
+- Configure all necessary permissions
 
 #### Option 2: Manual Setup
 ```bash
@@ -109,38 +112,66 @@ sudo yum install tor
 
 # Make scripts executable
 chmod +x ip-phantom ip_phantom.py
+
+# Test the installation
+./ip-phantom --check-ip
 ```
+
+## ⚡ Quick Reference
+
+### Most Common Commands
+```bash
+# Quick start - change IP every 10 seconds
+ip-phantom --interval 10
+
+# Check what your current IP is
+ip-phantom --check-ip
+
+# Test with demo mode (no actual IP changes)
+ip-phantom --demo --interval 5
+
+# Run with detailed output
+ip-phantom --interval 15 --verbose
+
+# Show all available options
+ip-phantom --help
+```
+
+### Typical Workflow
+1. **Install**: Run `./install.sh` once for global access
+2. **Test**: Use `ip-phantom --demo --check-ip` to verify
+3. **Real Use**: Run `ip-phantom --interval 10` for actual IP rotation
+4. **Stop**: Press `Ctrl+C` to gracefully shutdown
 
 ### Usage
 
-#### 🎯 Demo Mode (No Dependencies)
-Perfect for demonstrations and testing:
+#### 🌐 Real IP Changing with Tor (Primary Feature)
 ```bash
-python3 ip_phantom.py --demo --interval 3
+# Start IP changing every 10 seconds
+ip-phantom --interval 10
+
+# Start with verbose logging
+ip-phantom --interval 15 --verbose
+
+# Check current IP address
+ip-phantom --check-ip
+
+# View all options
+ip-phantom --help
 ```
 
-#### 🌐 Real IP Changing with Tor
+#### 🔧 Direct Python Usage (Alternative)
 ```bash
-# Start IP changing (default: every 3 seconds)
-python3 ip_phantom.py
-
-# Custom interval (10 seconds)
+# Using Python directly
 python3 ip_phantom.py --interval 10
-
-# Check current IP
 python3 ip_phantom.py --check-ip
-
-# Verbose logging
 python3 ip_phantom.py --verbose --interval 5
 ```
 
-#### 🔧 CLI Wrapper (After Installation)
+#### 🎯 Demo Mode (Testing Only)
+For presentations and testing without real IP changes:
 ```bash
-# Global usage (after running install.sh)
-ip-phantom --demo
-ip-phantom --interval 10
-ip-phantom --check-ip
-ip-phantom --help
+ip-phantom --demo --interval 3
 ```
 
 ## 🎯 Demo Mode Features
@@ -171,52 +202,76 @@ ip-phantom --help
 ### System Requirements
 - **OS**: Linux, macOS, or Windows with WSL
 - **Python**: 3.6 or higher
-- **Privileges**: sudo access for VPN operations (not needed for demo mode)
+- **Network**: Internet connection for Tor network (real mode only)
 - **Memory**: 512MB RAM minimum
 - **Storage**: 100MB free space
+- **Privileges**: Standard user privileges (no sudo required for demo mode)
 
 ### Dependencies
-- `python3` - Core runtime
-- `openvpn` - VPN client software (not needed for demo mode)
+**For Real Mode (Tor):**
+- `python3` - Core runtime (3.6+)
+- `tor` - Tor network client (auto-installed if missing)
 - `curl` - HTTP requests for IP checking
-- `sudo` - Administrative privileges (not needed for demo mode)
+- Internet connection for Tor network access
+
+**For Demo Mode:**
+- `python3` - Core runtime (3.6+)
+- `curl` - HTTP requests for IP checking (simulation)
 
 ## 📚 Usage Examples
 
 ### 🎯 Command Line Options
 
-| Option | Description | Example |
-|--------|-------------|---------|
-| `--interval N` | IP change interval in seconds (1-86400) | `--interval 10` |
-| `--demo` | Demo mode with simulated IP changes | `--demo` |
-| `--check-ip` | Check current IP and exit | `--check-ip` |
-| `--verbose` | Enable detailed logging | `--verbose` |
-| `--config FILE` | Custom configuration file | `--config my_config.json` |
-| `--help` | Show help message | `--help` |
+| Option | Short | Description | Example |
+|--------|-------|-------------|---------|
+| `--interval N` | `-i N` | IP change interval in seconds (1-86400) | `--interval 10` |
+| `--config FILE` | `-c FILE` | Custom configuration file path | `--config my_config.json` |
+| `--verbose` | `-v` | Enable detailed logging output | `--verbose` |
+| `--check-ip` | | Check current IP address and exit | `--check-ip` |
+| `--demo` | | Demo mode with simulated IP changes | `--demo` |
+| `--help` | `-h` | Show comprehensive help message | `--help` |
 
 
 ## 🛡️ Security Features
 
 ### 🔒 Operational Security
-- **No credential storage**: Secure credential handling via separate auth files
-- **Minimal privileges**: Requests sudo only when needed for VPN operations  
-- **Encrypted connections**: All VPN connections use strong encryption
-- **DNS leak protection**: Automatic DNS configuration management
-- **Clean disconnect**: Graceful VPN cleanup on exit with zero error messages
-- **Safe shutdown**: Professional error handling with no broken pipe errors
+- **No credential storage**: No personal information stored locally
+- **Minimal privileges**: Standard user privileges, no sudo required for core functionality
+- **Encrypted connections**: All traffic routed through Tor's encrypted network
+- **DNS leak protection**: Automatic DNS routing through Tor network
+- **Clean disconnect**: Graceful Tor circuit cleanup on exit
+- **Safe shutdown**: Professional error handling with responsive Ctrl+C
 
-### 📊 Monitoring & Logging
-- **Real-time IP verification**: Confirms successful IP changes with visual indicators
+### 📈 Monitoring & Logging
+- **Real-time IP verification**: Confirms successful IP changes via Tor with visual indicators
 - **Comprehensive logs**: Detailed logging to `ip_phantom.log` with clean console output
-- **Error tracking**: Failed connection attempts and recovery actions
-- **Connection audit**: VPN connection/disconnection events
-- **Professional output**: Clean, emoji-enhanced status messages
+- **Error tracking**: Failed Tor circuit attempts and recovery actions
+- **Circuit audit**: Tor circuit creation/renewal events
+- **Professional output**: Clean, emoji-enhanced status messages with country detection
 
 ### 🔐 Privacy Protection
 - **No data retention**: No personal information stored locally
 - **Secure file permissions**: Configuration files secured with 600 permissions
 - **Memory safety**: Credentials cleared from memory after use
 - **Demo mode safety**: Test functionality without exposing real IP addresses
+
+## 🌐 How Tor Integration Works
+
+### Real Mode (Tor Network)
+- **Automatic Tor Daemon**: Starts and manages Tor process automatically
+- **Circuit Renewal**: Forces new Tor circuits to change IP addresses
+- **SOCKS Proxy**: Routes traffic through Tor's SOCKS5 proxy (127.0.0.1:9050)
+- **Control Port**: Uses Tor's control interface (9051) for circuit management
+- **IP Verification**: Confirms IP changes via Tor-routed HTTP requests
+
+### Demo Mode vs Real Mode
+| Feature | Demo Mode | Real Mode (Tor) |
+|---------|-----------|------------------|
+| **IP Changes** | Simulated | Actually changes your public IP |
+| **Network Traffic** | No routing changes | All traffic through Tor |
+| **Dependencies** | Python + curl only | Python + Tor + curl |
+| **Speed** | Instant simulation | ~3-5 seconds per change |
+| **Use Case** | Presentations, testing | Real anonymity and privacy |
 
 ## 🔧 Configuration
 
@@ -227,34 +282,46 @@ The tool automatically creates and manages Tor configuration. For advanced users
 3. **Custom intervals**: Use `--interval` option
 
 ### Sample Configuration
+
+**config.json (IP Phantom Configuration):**
 ```json
 {
-  "vpn_configs": [
-    {
-      "name": "US-East-1",
-      "type": "openvpn",
-      "config_file": "/home/user/vpn-configs/us-east-1.ovpn",
-      "enabled": true
-    },
-    {
-      "name": "EU-West-1",
-      "type": "openvpn",
-      "config_file": "/home/user/vpn-configs/eu-west-1.ovpn",
-      "enabled": true
-    }
-  ],
+  "vpn_configs": [],
   "proxy_configs": [
     {
       "name": "tor-proxy",
       "type": "socks5",
       "host": "127.0.0.1",
       "port": 9050,
-      "enabled": false
+      "enabled": true
     }
   ],
   "phantom_method": "tor",
   "check_ip_url": "https://httpbin.org/ip"
 }
+```
+
+**torrc (Tor Network Configuration):**
+```
+# SOCKS proxy on port 9050
+SocksPort 9050
+
+# Control port for circuit management (IP rotation)
+ControlPort 9051
+
+# Allow connections from localhost only
+SocksBindAddress 127.0.0.1
+
+# Enable control port authentication
+CookieAuthentication 1
+CookieAuthFile /tmp/tor-control-cookie
+
+# Circuit settings for better IP rotation
+NewCircuitPeriod 60
+MaxCircuitDirtiness 300
+
+# Directory for Tor data
+DataDirectory /tmp/tor-data
 ```
 
 ## 🚨 Legal Disclaimer

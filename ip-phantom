@@ -75,42 +75,43 @@ show_help() {
     echo ""
     echo -e "${YELLOW}🔧 UTILITY COMMANDS:${NC}"
     echo "  --check-ip               📍 Check current IP address and exit"
-    echo "  --demo                   🎯 Run in demo mode (simulated IP changes)"
-    echo "  --tor                    🌐 Use Tor network for real IP changes (FREE!)"
+    echo "  --demo                   🎯 Run in demo mode (simulated IP changes only)"
     echo ""
     echo -e "${YELLOW}✨ QUICK START EXAMPLES:${NC}"
-    echo -e "  ${GREEN}# 🆓 FREE Real IP Changes with Tor!${NC}"
-    echo "  $COMMAND --interval 5"
-    echo ""
-    echo -e "  ${GREEN}# 🎯 Demo Mode - Perfect for presentations!${NC}"
-    echo "  $COMMAND --demo --interval 3"
+    echo -e "  ${GREEN}# 🆓 Real IP Changes with Tor (Main Feature)${NC}"
+    echo "  $COMMAND --interval 10           # Change IP every 10 seconds"
+    echo "  $COMMAND --interval 30 --verbose # With detailed logging"
     echo ""
     echo -e "  ${GREEN}# 🚀 Basic Operations${NC}"
-    echo "  $COMMAND --check-ip              # Check current IP"
-    echo "  $COMMAND --tor --interval 10     # Real IP changes via Tor"
+    echo "  $COMMAND --check-ip              # Check current IP and exit"
+    echo "  $COMMAND --verbose               # Enable detailed logging"
     echo ""
-    echo -e "${YELLOW}🎯 DEMO MODE vs REAL MODE:${NC}"
-    echo -e "  ${GREEN}Demo Mode:${NC}"
-    echo "  ✅ Zero dependencies - no setup required"
-    echo "  ✅ Perfect for cybersecurity demonstrations"
-    echo "  ✅ Safe simulated IP changes"
-    echo "  ✅ Professional visual output"
+    echo -e "  ${GREEN}# 🎯 Demo Mode (Testing Only)${NC}"
+    echo "  $COMMAND --demo --interval 3     # Simulated IP changes for testing"
     echo ""
-    echo -e "  ${GREEN}Real Mode (Tor):${NC}"
-    echo "  ✅ 100% FREE - no VPN subscriptions"
-    echo "  ✅ Actually changes your IP address"
-    echo "  ✅ Anonymous browsing through Tor"
-    echo "  ✅ Real cybersecurity protection"
+    echo -e "${YELLOW}🎯 REAL MODE (Tor) vs DEMO MODE:${NC}"
+    echo -e "  ${GREEN}Real Mode (Default - Tor Network):${NC}"
+    echo "  ✅ 100% FREE - no VPN subscriptions required"
+    echo "  ✅ Actually changes your public IP address"
+    echo "  ✅ Anonymous browsing through Tor network"
+    echo "  ✅ Real cybersecurity and privacy protection"
+    echo "  ✅ Automatic Tor daemon management"
+    echo ""
+    echo -e "  ${GREEN}Demo Mode (Testing Only):${NC}"
+    echo "  ✅ Simulated IP changes for presentations"
+    echo "  ✅ No network dependencies required"
+    echo "  ✅ Safe for testing functionality"
     echo ""
     echo -e "${YELLOW}📋 SYSTEM REQUIREMENTS:${NC}"
-    echo -e "  ${GREEN}For Demo Mode:${NC}"
+    echo -e "  ${GREEN}For Real Mode (Default):${NC}"
+    echo "  - Python 3.6+ 🐍"
+    echo "  - Tor network client 🔒 (auto-installed if missing)"
+    echo "  - curl (for IP checking) 🌐"
+    echo "  - Internet connection 📡"
+    echo ""
+    echo -e "  ${GREEN}For Demo Mode Only:${NC}"
     echo "  - Python 3.6+ 🐍"
     echo "  - curl (for IP checking) 🌐"
-    echo ""
-    echo -e "  ${GREEN}For Real Mode (Tor):${NC}"
-    echo "  - All demo requirements plus:"
-    echo "  - Tor network client 🔒"
-    echo "  - Internet connection 📡"
     echo ""
     if [[ "$COMMAND" == "./ip-phantom" ]]; then
         echo -e "${YELLOW}🚀 INSTALLATION TIP:${NC}"
@@ -155,8 +156,8 @@ check_dependencies() {
         missing_deps+=("python3")
     fi
     
-    # Check Tor (only for real mode)
-    if [[ "$tor" == "true" ]] && ! command -v tor &> /dev/null; then
+    # Check Tor (for real mode - install if missing)
+    if [[ "$demo" != "--demo" ]] && ! command -v tor &> /dev/null; then
         echo -e "${YELLOW}Installing Tor automatically...${NC}"
         if command -v brew &> /dev/null; then
             brew install tor
@@ -193,7 +194,6 @@ main() {
     verbose=""
     check_ip=""
     demo=""
-    tor=""
     
     while [[ $# -gt 0 ]]; do
         case $1 in
@@ -215,10 +215,6 @@ main() {
                 ;;
             --demo)
                 demo="--demo"
-                shift
-                ;;
-            --tor)
-                tor="true"
                 shift
                 ;;
             -h|--help)
@@ -283,10 +279,6 @@ main() {
     
     if [[ -n "$demo" ]]; then
         python_args+=("--demo")
-    fi
-    
-    if [[ -n "$tor" ]]; then
-        python_args+=("--tor")
     fi
     
     # Show configuration
