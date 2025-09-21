@@ -1,0 +1,21 @@
+{
+    "vpn_configs": [
+        {
+            "name": "test_server_1",
+            "type": "openvpn",
+            "config_file": "test-vpn-configs/test-server.ovpn",
+            "enabled": true
+        }
+    ],
+    "proxy_configs": [
+        {
+            "name": "socks_proxy1",
+            "type": "socks5",
+            "host": "127.0.0.1",
+            "port": 9050,
+            "enabled": true
+        }
+    ],
+    "rotation_method": "vpn",
+    "check_ip_url": "https://httpbin.org/ip"
+}

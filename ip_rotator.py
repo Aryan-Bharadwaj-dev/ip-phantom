@@ -278,7 +278,7 @@ class IPRotator:
             
         try:
             # Security: Use specific process filtering to prevent killing unintended processes
-            subprocess.run(['sudo', 'pkill', '-f', '/usr/sbin/openvpn', '--exact'], 
+            subprocess.run(['sudo', 'pkill', '-f', 'openvpn'], 
                          stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False, timeout=10)
             
             # Reset DNS settings (only if systemd-resolved exists)
