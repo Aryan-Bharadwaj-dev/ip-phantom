@@ -20,12 +20,15 @@ from datetime import datetime
 class IPRotator:
     """Main class for handling IP rotation functionality."""
     
-    def __init__(self, interval: int = 3, config_file: str = "config.json"):
+    def __init__(self, interval: int = 3, config_file: str = "config.json", demo_mode: bool = False):
         self.interval = interval
         self.config_file = config_file
         self.running = True
         self.current_ip = None
         self.vpn_configs = []
+        self.demo_mode = demo_mode
+        self.demo_ips = ["192.168.1.100", "203.0.113.45", "198.51.100.78", "203.0.113.92", "192.0.2.146"]
+        self.demo_counter = 0
         self.setup_logging()
         self.load_configuration()
         
@@ -96,6 +99,10 @@ class IPRotator:
     
     def get_current_ip(self) -> Optional[str]:
         """Get current external IP address."""
+        if self.demo_mode:
+            # Return simulated IP for demo purposes
+            return self.demo_ips[self.demo_counter % len(self.demo_ips)]
+        
         try:
             # Using multiple IP check services for reliability
             ip_services = [
@@ -198,14 +205,38 @@ class IPRotator:
     def rotate_ip(self) -> bool:
         """Rotate to a new IP address."""
         try:
+            if self.demo_mode:
+                # Demo mode: simulate successful IP rotation
+                old_ip = self.get_current_ip()
+                self.logger.info(f"Current IP: {old_ip}")
+                
+                # Simulate rotation delay
+                time.sleep(1)
+                self.demo_counter += 1
+                
+                new_ip = self.get_current_ip()
+                self.current_ip = new_ip
+                self.logger.info(f"✓ IP successfully rotated: {old_ip} → {new_ip} (Demo Mode)")
+                return True
+            
+            # Check for valid VPN configurations
             available_configs = [cfg for cfg in self.vpn_configs if cfg.get('enabled', True)]
             
-            if not available_configs:
-                self.logger.error("No available VPN configurations")
+            # Filter for configs with existing files
+            valid_configs = []
+            for cfg in available_configs:
+                config_file = cfg.get('config_file')
+                if config_file and config_file != "/path/to/server1.ovpn" and config_file != "/path/to/server2.ovpn":
+                    import os
+                    if os.path.exists(config_file):
+                        valid_configs.append(cfg)
+            
+            if not valid_configs:
+                self.logger.warning("No valid VPN configuration files found. Use --demo for demonstration mode.")
                 return False
             
             # Select random VPN configuration
-            selected_config = random.choice(available_configs)
+            selected_config = random.choice(valid_configs)
             
             self.logger.info(f"Attempting to rotate IP using: {selected_config['name']}")
             
@@ -323,6 +354,12 @@ Examples:
         help='Enable verbose logging'
     )
     
+    parser.add_argument(
+        '--demo',
+        action='store_true',
+        help='Run in demo mode with simulated IP changes (for demonstrations)'
+    )
+    
     args = parser.parse_args()
     
     # Set logging level
@@ -331,10 +368,12 @@ Examples:
     
     # Just check IP and exit
     if args.check_ip:
-        rotator = IPRotator(interval=args.interval, config_file=args.config)
+        rotator = IPRotator(interval=args.interval, config_file=args.config, demo_mode=args.demo)
         current_ip = rotator.get_current_ip()
         if current_ip:
             print(f"Current IP: {current_ip}")
+            if args.demo:
+                print("(Running in demo mode)")
         else:
             print("Failed to get current IP")
             sys.exit(1)
@@ -346,7 +385,10 @@ Examples:
         sys.exit(1)
     
     # Start IP rotator
-    rotator = IPRotator(interval=args.interval, config_file=args.config)
+    rotator = IPRotator(interval=args.interval, config_file=args.config, demo_mode=args.demo)
+    if args.demo:
+        print("\n🔍 Running in DEMO MODE - IP changes are simulated for demonstration")
+        print("This showcases the tool's functionality without requiring actual VPN configs\n")
     rotator.run()
 
 

@@ -49,12 +49,14 @@ show_help() {
     echo "  --check-ip               Check current IP address and exit"
     echo "  --setup                  Run initial setup wizard"
     echo "  --stop                   Stop all running VPN connections"
+    echo "  --demo                   Run in demo mode (simulated IP changes)"
     echo ""
     echo -e "${YELLOW}EXAMPLES:${NC}"
     echo "  ./ip-rotator --interval 10          # Rotate every 10 seconds"
     echo "  ./ip-rotator --config my_vpns.json  # Use custom configuration"
     echo "  ./ip-rotator --check-ip             # Just check current IP"
     echo "  ./ip-rotator --setup                # Run setup wizard"
+    echo "  ./ip-rotator --demo --interval 5    # Demo mode with 5s intervals"
     echo ""
     echo -e "${YELLOW}REQUIREMENTS:${NC}"
     echo "  - Python 3.6+"
@@ -182,6 +184,7 @@ main() {
     check_ip=""
     setup=""
     stop=""
+    demo=""
     
     while [[ $# -gt 0 ]]; do
         case $1 in
@@ -207,6 +210,10 @@ main() {
                 ;;
             --stop)
                 stop=true
+                shift
+                ;;
+            --demo)
+                demo="--demo"
                 shift
                 ;;
             -h|--help)
@@ -262,6 +269,10 @@ main() {
     
     if [[ -n "$check_ip" ]]; then
         python_cmd="$python_cmd $check_ip"
+    fi
+    
+    if [[ -n "$demo" ]]; then
+        python_cmd="$python_cmd $demo"
     fi
     
     # Show configuration
