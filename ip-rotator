@@ -44,15 +44,27 @@ print_banner() {
 
 # Help function
 show_help() {
+    # Detect if running from global installation or local
+    # Check how this script was actually called
+    SCRIPT_NAME="$(basename "$0")"
+    if [[ "$SCRIPT_NAME" == "ip-rotator" ]] && [[ "$0" != "./ip-rotator" ]]; then
+        COMMAND="ip-rotator"
+        INSTALL_STATUS="🌍 Global Installation"
+    else
+        COMMAND="./ip-rotator"
+        INSTALL_STATUS="📁 Local Installation"
+    fi
+    
     echo -e "${BLUE}"
     echo "=================================================================="
     echo "                    🎯 IP ROTATOR HELP GUIDE"
     echo "=================================================================="
     echo -e "${NC}"
     echo -e "${GREEN}IP Rotator - Professional Cybersecurity IP Rotation Tool${NC}"
+    echo -e "${BLUE}$INSTALL_STATUS${NC}"
     echo ""
     echo -e "${YELLOW}📋 USAGE:${NC}"
-    echo "  ./ip-rotator [OPTIONS]"
+    echo "  $COMMAND [OPTIONS]"
     echo ""
     echo -e "${YELLOW}⚙️  CORE OPTIONS:${NC}"
     echo "  -i, --interval SECONDS    ⏱️  Time interval between rotations (default: 3)"
@@ -68,16 +80,16 @@ show_help() {
     echo ""
     echo -e "${YELLOW}✨ QUICK START EXAMPLES:${NC}"
     echo -e "  ${GREEN}# 🎯 Demo Mode - Perfect for presentations!${NC}"
-    echo "  ./ip-rotator --demo --interval 5"
+    echo "  $COMMAND --demo --interval 5"
     echo ""
     echo -e "  ${GREEN}# 🚀 Basic Operations${NC}"
-    echo "  ./ip-rotator --check-ip              # Check current IP"
-    echo "  ./ip-rotator --interval 10           # Rotate every 10 seconds"
-    echo "  ./ip-rotator --setup                 # Initial configuration"
+    echo "  $COMMAND --check-ip              # Check current IP"
+    echo "  $COMMAND --interval 10           # Rotate every 10 seconds"
+    echo "  $COMMAND --setup                 # Initial configuration"
     echo ""
     echo -e "  ${GREEN}# 🔧 Advanced Usage${NC}"
-    echo "  ./ip-rotator --config my_vpns.json --verbose  # Custom config + logging"
-    echo "  ./ip-rotator --demo --verbose --interval 3    # Verbose demo mode"
+    echo "  $COMMAND --config my_vpns.json --verbose  # Custom config + logging"
+    echo "  $COMMAND --demo --verbose --interval 3    # Verbose demo mode"
     echo ""
     echo -e "${YELLOW}🎯 DEMO MODE FEATURES:${NC}"
     echo "  ✅ Zero dependencies - no VPN setup required"
@@ -97,18 +109,31 @@ show_help() {
     echo "  - VPN configuration files (.ovpn) 📄"
     echo "  - sudo privileges (for VPN operations) 👑"
     echo ""
-    echo -e "${YELLOW}🚀 INSTALLATION TIP:${NC}"
-    echo -e "  ${GREEN}Make globally available (optional):${NC}"
-    echo "  sudo ln -s \$(pwd)/ip-rotator /usr/local/bin/ip-rotator"
-    echo "  # Then run from anywhere: ip-rotator --demo"
+    if [[ "$COMMAND" == "./ip-rotator" ]]; then
+        echo -e "${YELLOW}🚀 INSTALLATION TIP:${NC}"
+        echo -e "  ${GREEN}Make globally available (run once):${NC}"
+        echo "  ./install.sh"
+        echo "  # Then use: ip-rotator --demo (from anywhere!)"
+    else
+        echo -e "${YELLOW}🎉 GLOBAL INSTALLATION ACTIVE:${NC}"
+        echo -e "  ${GREEN}You're using the global installation! Benefits:${NC}"
+        echo "  ✅ Run from any directory"
+        echo "  ✅ No need for ./"
+        echo "  ✅ Professional workflow"
+    fi
     echo ""
     echo -e "${YELLOW}🔍 TROUBLESHOOTING:${NC}"
     echo -e "  ${GREEN}Test basic functionality:${NC}"
-    echo "  ./ip-rotator --demo --check-ip       # Test without VPN"
-    echo "  ./ip-rotator --demo --verbose        # Debug with details"
+    echo "  $COMMAND --demo --check-ip       # Test without VPN"
+    echo "  $COMMAND --demo --verbose        # Debug with details"
     echo ""
     echo -e "  ${GREEN}Permission issues:${NC}"
-    echo "  chmod +x ip-rotator ip_rotator.py   # Fix permissions"
+    if [[ "$COMMAND" == "./ip-rotator" ]]; then
+        echo "  chmod +x ip-rotator ip_rotator.py   # Fix permissions"
+    else
+        echo "  cd $(readlink $(which ip-rotator) | xargs dirname)  # Go to source"
+        echo "  chmod +x ip-rotator ip_rotator.py   # Fix permissions"
+    fi
     echo ""
     echo -e "${RED}⚠️  LEGAL DISCLAIMER:${NC}"
     echo -e "This tool is for ${YELLOW}educational and authorized security testing only${NC}."
